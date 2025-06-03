@@ -86,7 +86,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.2.8</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.2.9</p>
 
   <div id="container"></div>
   
@@ -160,6 +160,7 @@
             const controls = { ...initialValues };
 
             const gui = new dat.GUI();
+            gui.close(); // 初期状態は折りたたみ
 
             gui.add(controls, 'posX', -2, 2).onChange(v => sceneObj.position.x = v);
             gui.add(controls, 'posY', -2, 2).onChange(v => sceneObj.position.y = v);

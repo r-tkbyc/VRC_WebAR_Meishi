@@ -1,23 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <title>WebARご利用案内</title>
   <style>
-    body { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #222; color: #fff; margin: 0;}
-    .card { background: #333; border-radius: 16px; padding: 32px 24px; max-width: 350px; box-shadow: 0 4px 16px #0006; }
-    .card h2 { margin-top: 0; }
-    .card button { margin-top: 24px; padding: 12px 24px; font-size: 1.1em; border-radius: 8px; border: none; background: #2d88ff; color: #fff; cursor: pointer; }
-    .card button:hover { background: #1c62b9; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #222;
+      color: #fff;
+      min-height: 100vh;
+      min-width: 100vw;
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .card {
+      background: #333;
+      border-radius: 20px;
+      box-shadow: 0 4px 24px #0008;
+      padding: 36px 18px 28px 18px;
+      width: 90vw;
+      max-width: 400px;
+      min-width: 220px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .card h2 {
+      font-size: 1.5em;
+      margin: 0 0 16px 0;
+    }
+    .card p, .card ul {
+      font-size: 1.12em;
+      line-height: 1.6;
+      margin: 0 0 10px 0;
+    }
+    .card ul {
+      list-style: disc inside;
+      padding-left: 0;
+      margin: 0 0 18px 0;
+      text-align: left;
+    }
+    .card button {
+      margin-top: 20px;
+      padding: 15px 0;
+      width: 100%;
+      font-size: 1.18em;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(90deg,#2d88ff,#5aabff);
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 2px 8px #0004;
+      letter-spacing: 0.05em;
+      transition: background 0.2s;
+    }
+    .card button:active {
+      background: linear-gradient(90deg,#1767c0,#337ed7);
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>WebARご利用案内</h2>
-    <p>このWebAR体験では、お使いのスマートフォンの<br><b>カメラ</b>や<b>位置情報</b>へのアクセス許可が必要です。</p>
-    <ul style="margin-left: 1em;">
-      <li>許可しない場合、AR体験はご利用いただけません</li>
-      <li>周囲の安全に注意してご利用ください</li>
+    <p>
+      このWebAR体験では、<br>
+      <b>カメラ</b>や<b>位置情報</b>へのアクセス許可が必要です。
+    </p>
+    <ul>
+      <li>カメラを許可しないとAR体験はご利用いただけません</li>
+      <li>周囲の安全に十分ご注意ください</li>
+      <li>スマートフォンを<strong>縦向き</strong>でご利用ください</li>
     </ul>
     <button onclick="location.href='webar.html'">OK・利用を開始する</button>
   </div>

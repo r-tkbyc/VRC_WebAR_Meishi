@@ -20,20 +20,22 @@
       align-items: center;
     }
     .card {
-      background: #042b35; /* 深い青緑（必要なら調整） */
+      background: #042b35;
       border-radius: 16px;
-      box-shadow: 0 0 16px #1d6364dc, 0 0 16px 1px #1d6364bb; /* 外側グロー */
-      border: 2px solid #1d6364bb; /* 外枠 */
+      box-shadow: 0 0 16px #1d6364dc, 0 0 16px 1px #1d6364bb;
+      border: 2px solid #1d6364bb;
       position: relative;
-      padding: 32px 18px 28px 18px;
+      padding: 42px 38px 38px 38px;
       width: 90vw;
       max-width: 400px;
       min-width: 220px;
       text-align: center;
       margin: 0 auto;
       z-index: 2;
-      /* 下に内側線を引くための余白 */
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     /* 内側ダブル線 */
     .card::before {
@@ -50,31 +52,34 @@
       font-size: 1.5em;
       margin: 0 0 16px 0;
     }
-    .card p, .card ul {
+    .card p {
       font-size: 1.12em;
       line-height: 1.6;
       margin: 0 0 10px 0;
     }
     .card ul {
-      list-style: disc inside;
-      padding-left: 0;
+      font-size: 1.12em;
+      line-height: 1.6;
+      list-style: disc outside;   /* outsideで行頭にマーク、インデント */
+      padding-left: 1.5em;        /* インデント（好みで調整） */
       margin: 0 0 18px 0;
       text-align: left;
+      align-self: flex-start;   /* ulだけ左寄せ */
     }
     .card button {
       width: 80vw;
       max-width: 340px;
       min-width: 120px;
       height: 56px;
-      background: #073d40; /* 半透明ダーク */
-      border: 5px solid #0e9b92;      /* ターコイズ太枠 */
+      background: #073d40;
+      border: 5px solid #0e9b92;
       border-radius: 20px;
       color: #ffffff;
       font-size: 1.25em;
       font-weight: bold;
       letter-spacing: 0.04em;
       text-align: center;
-      margin: 32px auto 0 auto;
+      margin: 32px 0 0 0;
       cursor: pointer;
       box-shadow: 0 0 12px #27c7bc44;
       transition: background 0.16s, color 0.16s, box-shadow 0.16s;
@@ -91,12 +96,12 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.0.4</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.0.5</p>
   <div class="card">
     <h2>WebARご利用案内</h2>
     <p>
       このWebAR体験では、<br>
-      <b>カメラ</b>や<b>位置情報</b>へのアクセス許可が必要です。
+      <b>カメラ</b>や<b>位置情報</b>など、アクセス許可が必要です。
     </p>
     <ul>
       <li>カメラを許可しないとAR体験はご利用いただけません</li>

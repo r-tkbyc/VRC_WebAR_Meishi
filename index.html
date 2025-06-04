@@ -20,15 +20,31 @@
       align-items: center;
     }
     .card {
-      background: #333;
-      border-radius: 20px;
-      box-shadow: 0 4px 24px #0008;
-      padding: 36px 18px 28px 18px;
+      background: #063135; /* 深い青緑（必要なら調整） */
+      border-radius: 16px;
+      box-shadow: 0 0 16px #15e2c755, 0 0 0 2px #1fffd955; /* 外側グロー */
+      border: 4px solid #169b8b; /* 外枠 */
+      position: relative;
+      padding: 32px 18px 28px 18px;
       width: 90vw;
       max-width: 400px;
       min-width: 220px;
       text-align: center;
+      margin: 0 auto;
+      z-index: 2;
+      /* 下に内側線を引くための余白 */
       box-sizing: border-box;
+    }
+    /* 内側ダブル線 */
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 10px; left: 10px; right: 10px; bottom: 10px;
+      border-radius: 12px;
+      border: 2px solid #19f8e5;
+      pointer-events: none;
+      box-shadow: 0 0 8px #19f8e5aa;
+      z-index: 3;
     }
     .card h2 {
       font-size: 1.5em;

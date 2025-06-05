@@ -20,7 +20,8 @@
       height: 100%;
       position: relative;
     }
-    /* ローディング画面のスタイル */
+
+    /* --- ローディングモーダル --- */
     .loading-modal {
       position: fixed;
       inset: 0;
@@ -28,15 +29,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* 背景画像の上に半透明オーバーレイも追加したい場合 */
+      background: rgba(20,30,34,0.92);
+      transition: opacity 0.7s;
+    }
+    .loading-modal.fade-out {
+      opacity: 0;
+      pointer-events: none;
     }
     .loading-bg {
       position: absolute;
       inset: 0;
       background: #222 url('./assets/images/GuidePageBG.png') center center no-repeat;
       background-size: auto 100vh;
-      filter: blur(0px); /* 必要に応じて */
       z-index: 1;
+      opacity: 1;
     }
     .loading-modal video {
       z-index: 2;
@@ -48,26 +54,33 @@
       box-shadow: 0 0 24px #17b4aa88, 0 0 0 4px #19e5c644;
       background: #0a303655;
       display: block;
-    }
-    .loading-modal.fade-out {
-      opacity: 0;
       pointer-events: none;
-      transition: opacity 0.7s;
     }
-    /* スキャンUI */
+    .loading-text {
+      position: absolute;
+      bottom: 7vh;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 1.15em;
+      color: #fff;
+      letter-spacing: 0.06em;
+      text-shadow: 0 1px 6px #222, 0 0 8px #0ee6f988;
+      z-index: 3;
+      font-weight: bold;
+    }
+
+    /* --- スキャンUI --- */
     .scanning-ui {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 75vw; /* 画面幅の75% */
-      aspect-ratio: 774 / 468; /* 画像に応じて調整（例：774 / 468） */
+      width: 75vw;
+      aspect-ratio: 774 / 468;
       z-index: 999;
       overflow: hidden;
       border-radius: 12px;
     }
-
-    /* オーバーレイ画像 */
     .scan-overlay {
       width: 100%;
       height: 100%;
@@ -79,8 +92,6 @@
       pointer-events: none;
       opacity: 0.8;
     }
-
-    /* スキャンライン */
     .scan-line {
       position: absolute;
       left: 0;
@@ -90,8 +101,6 @@
       z-index: 2;
       animation: scanning 2s linear infinite;
     }
-
-    /* アニメーション（ガイド枠内だけを上下） */
     @keyframes scanning {
       0% { top: 0px; }
       50% { top: 100%; }
@@ -100,15 +109,11 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.1</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.2</p>
 
-  <div id="container"></div>
-  
-  <!-- ローディング画面 モーダル全体-->
+  <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
-    <!-- 背景（案内ページと同じ画像を使う） -->
     <div class="loading-bg"></div>
-    <!-- 動画アニメーション -->
     <video
       id="loadingVideo"
       src="assets/videos/LoadingAni.mp4"
@@ -117,45 +122,58 @@
       preload="auto"
       playsinline
       muted
-      style="background: transparent;"
+      tabindex="-1"
+      poster=""
     ></video>
+    <div class="loading-text" id="loadingText">Loading... 0%</div>
   </div>
 
+  <div id="container"></div>
 
-  <!-- スキャンUI（拡張版） -->
+  <!-- スキャンUI -->
   <div class="scanning-ui" id="scanning">
     <img src="./assets/guide/scan-overlay.png" class="scan-overlay" />
     <div class="scan-line"></div>
   </div>
 
   <script>
+    // --- ローディングモーダル進捗制御 ---
     const video = document.getElementById('loadingVideo');
+    const modal = document.getElementById('loadingModal');
+    const loadingText = document.getElementById('loadingText');
 
-    // 例：読み込み進捗のコールバック内で
+    // 進捗同期関数（0〜1）
     function setLoadingProgress(progress) {
       if (video.readyState >= 1 && video.duration) {
-        // 進捗値（0〜1）に動画尺を掛ける
         video.currentTime = progress * video.duration;
       }
+      loadingText.textContent = `Loading... ${Math.round(progress*100)}%`;
     }
 
+    // フェードアウト
     function hideLoadingModal() {
-      const modal = document.getElementById('loadingModal');
       modal.classList.add('fade-out');
       setTimeout(() => modal.style.display = 'none', 800);
     }
 
+    // 動画初期化
+    video.addEventListener('loadedmetadata', ()=>{
+      video.currentTime = 0;
+      video.pause();
+      setLoadingProgress(0);
+    });
+
+    // -------------------------------
     document.addEventListener("DOMContentLoaded", async () => {
       try {
         const mindarThree = new window.MINDAR.IMAGE.MindARThree({
           container: document.querySelector("#container"),
           imageTargetSrc: "./assets/target/targets.mind",
-          uiScanning: true,  // スキャンUIを有効化
-          uiLoading: true,   // ローディングUIを有効化
+          uiScanning: true,
+          uiLoading: true,
         });
 
         const {renderer, scene, camera} = mindarThree;
-        
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.outputEncoding = THREE.sRGBEncoding;
 
@@ -167,9 +185,8 @@
         scene.add(directionalLight);
 
         const anchor = mindarThree.addAnchor(0);
-        
+
         // ローディング画面とスキャンUIの要素
-        const loadingScreen = document.getElementById('loading');
         const scanningUI = document.getElementById('scanning');
 
         // GLTFローダーの作成と3Dモデルの読み込み
@@ -202,7 +219,7 @@
             const controls = { ...initialValues };
 
             const gui = new dat.GUI();
-            gui.close(); // 初期状態は折りたたみ
+            gui.close();
 
             gui.add(controls, 'posX', -2, 2).onChange(v => sceneObj.position.x = v);
             gui.add(controls, 'posY', -2, 2).onChange(v => sceneObj.position.y = v);
@@ -211,7 +228,6 @@
             gui.add(controls, 'rotY', 0, Math.PI * 2).onChange(v => sceneObj.rotation.y = v);
             gui.add(controls, 'rotZ', 0, Math.PI * 2).onChange(v => sceneObj.rotation.z = v);
             gui.add(controls, 'scale', 0.1, 3).onChange(v => sceneObj.scale.set(v, v, v));
-
             gui.add({ reset: () => {
               Object.assign(controls, initialValues);
               sceneObj.position.set(controls.posX, controls.posY, controls.posZ);
@@ -220,12 +236,13 @@
               gui.__controllers.forEach(c => c.updateDisplay());
             }}, 'reset').name("Reset to Default");
 
-            // ローディング終了
-            loadingScreen.classList.add('hidden');
+            // ★ GLTFのロード終了時にローディングを消す
+            hideLoadingModal();
           },
-          (progress) => {
-            const percent = (progress.loaded / progress.total * 100);
-            console.log('読み込み進捗:', percent + '%');
+          (xhr) => {
+            // ローディング進捗に応じて動画同期
+            let progress = xhr.loaded / xhr.total;
+            setLoadingProgress(progress);
           },
           (error) => {
             console.error('3Dモデルの読み込み中にエラーが発生しました:', error);
@@ -234,12 +251,9 @@
 
         // ターゲット検出時のイベント
         anchor.onTargetFound = () => {
-          console.log("ターゲットを検出しました");
           scanningUI.style.display = 'none';
         };
-
         anchor.onTargetLost = () => {
-          console.log("ターゲットを見失いました");
           scanningUI.style.display = 'block';
         };
 
@@ -250,14 +264,14 @@
           renderer.render(scene, camera);
         });
 
-        // クリーンアップ処理
         window.addEventListener('beforeunload', () => {
           mindarThree.stop();
         });
 
       } catch (error) {
         console.error('WebARの初期化中にエラーが発生しました:', error);
-        loadingScreen.innerHTML = `<h2>Error</h2><p>${error.message}</p>`;
+        // 万一エラー時はローディングモーダルも非表示に
+        hideLoadingModal();
       }
     });
   </script>

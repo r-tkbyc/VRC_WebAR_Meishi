@@ -114,7 +114,7 @@
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
-    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.0.5</p>
+    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.0.6</p>
     <div class="loading-bg"></div>
     <video
       id="loadingVideo"
@@ -247,7 +247,7 @@
 
             // ★ GLTFのロード終了時にローディングを消す
             // hideLoadingModal();
-            setTimeout(hideLoadingModal, 10000); //デバッグ用 5秒表示させる
+            setTimeout(hideLoadingModal, 5000); //デバッグ用 5秒表示させる
           },
           (xhr) => {
             // ローディング進捗に応じて動画同期

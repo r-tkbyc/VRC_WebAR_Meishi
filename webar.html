@@ -123,7 +123,7 @@
 </head>
 
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.4.0</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.4.1</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -139,7 +139,6 @@
       muted
       tabindex="-1"
       poster=""
-      autoplay
     ></video>
   </div>
 
@@ -316,7 +315,7 @@
             });
 
             // ★ GLTFのロード終了時にローディングを消す
-            setTimeout(hideLoadingModal, 5000); //デバッグ用 5秒表示させる
+            setTimeout(hideLoadingModal, 5200); //デバッグ用 5秒表示させる
           },
           (xhr) => {
             let progress = xhr.loaded / xhr.total;

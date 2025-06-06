@@ -6,7 +6,6 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.133.1/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.133.1/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js"></script>
   <style>
     html, body {
       margin: 0;
@@ -60,13 +59,12 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 75vw; /* 画面幅の75% */
-      aspect-ratio: 774 / 468; /* 画像に応じて調整（例：774 / 468） */
+      width: 75vw;
+      aspect-ratio: 774 / 468;
       z-index: 999;
       overflow: hidden;
       border-radius: 12px;
     }
-    /* オーバーレイ画像 */
     .scan-overlay {
       width: 100%;
       height: 100%;
@@ -78,7 +76,6 @@
       pointer-events: none;
       opacity: 0.8;
     }
-    /* スキャンライン */
     .scan-line {
       position: absolute;
       left: 0;
@@ -88,7 +85,6 @@
       z-index: 2;
       animation: scanning 2s linear infinite;
     }
-    /* アニメーション（ガイド枠内だけを上下） */
     @keyframes scanning {
       0% { top: 0px; }
       50% { top: 100%; }
@@ -103,7 +99,7 @@
       max-width: 600px;
       height: auto;
       z-index: 1200;
-      pointer-events: none; /* 子要素には手を通すため */
+      pointer-events: none;
     }
     .menu1-clickarea {
       width: 100%;
@@ -113,9 +109,10 @@
     .seg {
       position: absolute;
       pointer-events: auto;
-      background: rgba(255,0,0,1); /* 背景色をrgba(255,0,0,0.1)などにすると領域のデバッグ可 */
+      background: rgba(0,0,0,0); /* 透明。デバッグ時は色を付けてもOK */
+      /* ↑ デバッグ用: 例 background:rgba(255,0,0,0.2); など */
     }
-    /* 例：セグメントごとにtop/left/width/heightで重ねる */
+    /* セグメント領域（画像に応じて微調整を推奨） */
     .seg1 { left:0; top:50%; width:30%; height:50%; }
     .seg2 { left:30%; top:0; width:20%; height:50%; }
     .seg3 { left:50%; top:0; width:20%; height:50%; }
@@ -126,7 +123,7 @@
 </head>
 
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.8</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.4.0</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -154,26 +151,33 @@
     <div class="scan-line"></div>
   </div>
 
+  <!-- 操作用画像＆タッチエリア -->
+  <div class="menu1-area">
+    <img src="./assets/images/Menu1_ClickArea.png" class="menu1-clickarea" alt="Menu" />
+    <div class="seg seg1"></div>
+    <div class="seg seg2"></div>
+    <div class="seg seg3"></div>
+    <div class="seg seg4"></div>
+    <div class="seg seg5"></div> <!-- 未使用 -->
+    <div class="seg seg6"></div>
+  </div>
+
   <script>
     // --- ローディングモーダル進捗制御 ---
     const video = document.getElementById('loadingVideo');
     const modal = document.getElementById('loadingModal');
-    const loadingText = document.getElementById('loadingText');
 
-    // 進捗同期関数（0〜1）
     function setLoadingProgress(progress) {
       if (video.readyState >= 1 && video.duration) {
         video.currentTime = progress * video.duration;
       }
     }
 
-    // フェードアウト
     function hideLoadingModal() {
       modal.classList.add('fade-out');
       setTimeout(() => modal.style.display = 'none', 800);
     }
 
-    // 動画初期化
     video.addEventListener('loadedmetadata', ()=>{
       video.currentTime = 0;
       video.pause();
@@ -186,8 +190,8 @@
         const mindarThree = new window.MINDAR.IMAGE.MindARThree({
           container: document.querySelector("#container"),
           imageTargetSrc: "./assets/target/targets.mind",
-          uiScanning: true, // スキャンUIを有効化
-          uiLoading: true, // ローディングUIを有効化
+          uiScanning: true,
+          uiLoading: true,
         });
 
         const {renderer, scene, camera} = mindarThree;
@@ -214,7 +218,7 @@
           (gltf) => {
             const model = gltf;
             const sceneObj = model.scene;
-            window.sceneObj = sceneObj;
+            window.sceneObj = sceneObj; // ←ドラッグ＆セグメントからもアクセスできるように
 
             // 初期設定
             sceneObj.scale.set(0.5, 0.5, 0.5);
@@ -224,71 +228,97 @@
             // モデルをアンカーに追加
             anchor.group.add(sceneObj);
 
-            // ローディング完了時、動画を先頭から1回再生
-            if (video.readyState >= 1) {
-              video.currentTime = 0;
-              video.muted = true; // モバイル自動再生用（念のため）
-              video.play();
-           }
+            // セグメント回転用
+            let rotateYminus = false, rotateYplus = false, rotateXminus = false, rotateXplus = false;
 
-            // モデル操作
+            document.querySelector('.seg1').addEventListener('pointerdown', () => rotateYminus = true);
+            document.querySelector('.seg1').addEventListener('pointerup',   () => rotateYminus = false);
+            document.querySelector('.seg1').addEventListener('pointerleave',() => rotateYminus = false);
+
+            document.querySelector('.seg2').addEventListener('pointerdown', () => rotateXminus = true);
+            document.querySelector('.seg2').addEventListener('pointerup',   () => rotateXminus = false);
+            document.querySelector('.seg2').addEventListener('pointerleave',() => rotateXminus = false);
+
+            document.querySelector('.seg3').addEventListener('pointerdown', () => rotateXplus = true);
+            document.querySelector('.seg3').addEventListener('pointerup',   () => rotateXplus = false);
+            document.querySelector('.seg3').addEventListener('pointerleave',() => rotateXplus = false);
+
+            document.querySelector('.seg4').addEventListener('pointerdown', () => rotateYplus = true);
+            document.querySelector('.seg4').addEventListener('pointerup',   () => rotateYplus = false);
+            document.querySelector('.seg4').addEventListener('pointerleave',() => rotateYplus = false);
+
+            // 6だけは「タップ」でリセット
+            document.querySelector('.seg6').addEventListener('pointerdown', () => {
+              sceneObj.position.set(0, 0, 0);
+              sceneObj.rotation.set(Math.PI/2, 0, 0);
+              sceneObj.scale.set(0.5, 0.5, 0.5);
+            });
+
             // 毎フレーム回転
             function animateRotate() {
-              let dragging = false;
-              let lastX = 0, lastY = 0;
+              if(window.sceneObj) {
+                if(rotateYminus) sceneObj.rotation.y -= 0.03;
+                if(rotateYplus)  sceneObj.rotation.y += 0.03;
+                if(rotateXminus) sceneObj.rotation.x -= 0.03;
+                if(rotateXplus)  sceneObj.rotation.x += 0.03;
+              }
+              requestAnimationFrame(animateRotate);
+            }
+            animateRotate();
 
-              // タッチ開始
-              window.addEventListener('touchstart', function(e) {
-                if (e.touches.length === 1) {
-                  dragging = true;
-                  lastX = e.touches[0].clientX;
-                  lastY = e.touches[0].clientY;
-                }
-              });
+            // --- 画面ドラッグでモデル回転 ---
+            let dragging = false;
+            let lastX = 0, lastY = 0;
 
-              // タッチ移動
-              window.addEventListener('touchmove', function(e) {
-                if (!dragging || !window.sceneObj) return;
-                let deltaX = e.touches[0].clientX - lastX;
-                let deltaY = e.touches[0].clientY - lastY;
-                // 横移動でY軸回転、縦移動でX軸回転
-                window.sceneObj.rotation.y += deltaX * 0.01;
-                window.sceneObj.rotation.x += deltaY * 0.01;
+            // タッチ開始
+            window.addEventListener('touchstart', function(e) {
+              if (e.touches.length === 1) {
+                dragging = true;
                 lastX = e.touches[0].clientX;
                 lastY = e.touches[0].clientY;
-                e.preventDefault(); // ページスクロールなど防止
-              }, { passive: false });
+              }
+            });
 
-              // タッチ終了
-              window.addEventListener('touchend', function(e) {
-                dragging = false;
-              });
+            // タッチ移動
+            window.addEventListener('touchmove', function(e) {
+              if (!dragging || !window.sceneObj) return;
+              let deltaX = e.touches[0].clientX - lastX;
+              let deltaY = e.touches[0].clientY - lastY;
+              window.sceneObj.rotation.y += deltaX * 0.01;
+              window.sceneObj.rotation.x += deltaY * 0.01;
+              lastX = e.touches[0].clientX;
+              lastY = e.touches[0].clientY;
+              e.preventDefault();
+            }, { passive: false });
 
-              // PC用マウス操作（任意）
-              window.addEventListener('mousedown', function(e) {
-                dragging = true;
-                lastX = e.clientX;
-                lastY = e.clientY;
-              });
-              window.addEventListener('mousemove', function(e) {
-                if (!dragging || !window.sceneObj) return;
-                let deltaX = e.clientX - lastX;
-                let deltaY = e.clientY - lastY;
-                window.sceneObj.rotation.y += deltaX * 0.01;
-                window.sceneObj.rotation.x += deltaY * 0.01;
-                lastX = e.clientX;
-                lastY = e.clientY;
-              });
-              window.addEventListener('mouseup', function(e) {
-                dragging = false;
-              });
+            // タッチ終了
+            window.addEventListener('touchend', function(e) {
+              dragging = false;
+            });
+
+            // マウス操作（PC用）
+            window.addEventListener('mousedown', function(e) {
+              dragging = true;
+              lastX = e.clientX;
+              lastY = e.clientY;
+            });
+            window.addEventListener('mousemove', function(e) {
+              if (!dragging || !window.sceneObj) return;
+              let deltaX = e.clientX - lastX;
+              let deltaY = e.clientY - lastY;
+              window.sceneObj.rotation.y += deltaX * 0.01;
+              window.sceneObj.rotation.x += deltaY * 0.01;
+              lastX = e.clientX;
+              lastY = e.clientY;
+            });
+            window.addEventListener('mouseup', function(e) {
+              dragging = false;
+            });
 
             // ★ GLTFのロード終了時にローディングを消す
-            // hideLoadingModal();
             setTimeout(hideLoadingModal, 5000); //デバッグ用 5秒表示させる
           },
           (xhr) => {
-            // ローディング進捗に応じて動画同期
             let progress = xhr.loaded / xhr.total;
             setLoadingProgress(progress);
           },
@@ -297,7 +327,6 @@
           }
         );
 
-        // ターゲット検出時のイベント
         anchor.onTargetFound = () => {
           scanningUI.style.display = 'none';
         };
@@ -306,7 +335,7 @@
         };
 
         await mindarThree.start();
-        scanningUI.style.display = 'block'; // AR開始時にスキャンUIを表示
+        scanningUI.style.display = 'block';
 
         renderer.setAnimationLoop(() => {
           renderer.render(scene, camera);
@@ -318,20 +347,9 @@
 
       } catch (error) {
         console.error('WebARの初期化中にエラーが発生しました:', error);
-        // 万一エラー時はローディングモーダルも非表示に
         hideLoadingModal();
       }
     });
   </script>
-  <div class="menu1-area">
-    <img src="./assets/images/Menu1_ClickArea.png" class="menu1-clickarea" alt="Menu" />
-    <!-- クリック/タッチ用の6つの透明エリア（数字ごとにクラス付与） -->
-    <div class="seg seg1"></div>
-    <div class="seg seg2"></div>
-    <div class="seg seg3"></div>
-    <div class="seg seg4"></div>
-    <div class="seg seg5"></div> <!-- 今回は使わない？ -->
-    <div class="seg seg6"></div>
-  </div>
 </body>
 </html>

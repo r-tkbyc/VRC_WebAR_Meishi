@@ -119,7 +119,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.8</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.9</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -158,198 +158,180 @@
     // --- ローディングモーダル進捗制御 ---
     const video = document.getElementById('loadingVideo');
     const modal = document.getElementById('loadingModal');
-    const loadingText = document.getElementById('loadingText');
-
+  
     // 進捗同期関数（0〜1）
     function setLoadingProgress(progress) {
       if (video.readyState >= 1 && video.duration) {
         video.currentTime = progress * video.duration;
       }
     }
-
+  
     // フェードアウト
     function hideLoadingModal() {
       modal.classList.add('fade-out');
       setTimeout(() => modal.style.display = 'none', 800);
     }
-
+  
     // 動画初期化
     video.addEventListener('loadedmetadata', ()=>{
       video.currentTime = 0;
       video.pause();
       setLoadingProgress(0);
     });
-
-    // -------------------------------
+  
     document.addEventListener("DOMContentLoaded", async () => {
       try {
         const mindarThree = new window.MINDAR.IMAGE.MindARThree({
           container: document.querySelector("#container"),
           imageTargetSrc: "./assets/target/targets.mind",
-          uiScanning: true, // スキャンUIを有効化
-          uiLoading: true, // ローディングUIを有効化
+          uiScanning: true,
+          uiLoading: true,
         });
-
+  
         const {renderer, scene, camera} = mindarThree;
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.outputEncoding = THREE.sRGBEncoding;
-
+  
         const light = new THREE.AmbientLight(0xffffff, 1.0);
         scene.add(light);
-
+  
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
         directionalLight.position.set(0, 1, 1);
         scene.add(directionalLight);
-
+  
         const anchor = mindarThree.addAnchor(0);
-
-        // ローディング画面とスキャンUIの要素
         const scanningUI = document.getElementById('scanning');
-
-        // GLTFローダーの作成と3Dモデルの読み込み
         const loader = new THREE.GLTFLoader();
-
-        loader.load(
-          "./assets/model/AvatarModel1.glb",
-          (gltf) => {
-            const model = gltf;
-            const sceneObj = model.scene;
-            window.sceneObj = sceneObj; // グローバル化
-
-            let currentModel = null;
-
-            // モデルロード・切り替え
-            function loadAvatarModel(glbPath) {
+  
+        // 現在表示しているモデル
+        let currentModel = null;
+        window.sceneObj = null; // 最新モデルを常にグローバルへ
+  
+        // モデル切り替え
+        function loadAvatarModel(glbPath) {
+          loader.load(
+            glbPath,
+            (gltf) => {
+              // 既存を削除
               if (currentModel && anchor.group.children.includes(currentModel)) {
                 anchor.group.remove(currentModel);
               }
-              loader.load(
-                glbPath,
-                (gltf) => {
-                  const model = gltf.scene;
-                  model.scale.set(0.5, 0.5, 0.5);
-                  model.rotation.set(Math.PI / 2, 0, 0);
-                  model.position.set(0, 0, 0);
-                  anchor.group.add(model);
-                  currentModel = model;
+              // 新モデル
+              const model = gltf.scene;
+              model.scale.set(0.5, 0.5, 0.5);
+              model.rotation.set(Math.PI / 2, 0, 0);
+              model.position.set(0, 0, 0);
+              anchor.group.add(model);
+              currentModel = model;
+              window.sceneObj = model;
+  
+              // 初回のみローディング動画再生
+              if (!window._avatarLoadedOnce) {
+                if (video.readyState >= 1) {
+                  video.currentTime = 0;
+                  video.muted = true;
+                  video.play();
                 }
-              );
+                window._avatarLoadedOnce = true;
+              }
+            },
+            (xhr) => {
+              let progress = xhr.loaded / xhr.total;
+              setLoadingProgress(progress);
+            },
+            (error) => {
+              console.error('3Dモデルの読み込み中にエラー:', error);
             }
-
-            // 初期表示でアバター0
-            loadAvatarModel('./assets/models/AvatarModel0.glb');
-
-            // タップで切り替え
-            document.querySelector('.seg1').addEventListener('pointerdown', () => {
-              loadAvatarModel('./assets/models/AvatarModel0.glb');
-            });
-            document.querySelector('.seg2').addEventListener('pointerdown', () => {
-              loadAvatarModel('./assets/models/AvatarModel1.glb');
-            });
-
-            // ローディング完了時、動画を先頭から1回再生
-            if (video.readyState >= 1) {
-              video.currentTime = 0;
-              video.muted = true; // モバイル自動再生用（念のため）
-              video.play();
-           }
-
-            // ドラッグ回転用
-            let dragging = false;
-            let lastX = 0, lastY = 0;
-
-            // ドラッグ回転用のタッチ操作
-            window.addEventListener('touchstart', function(e) {
-              if (e.touches.length === 1) {
-                dragging = true;
-                lastX = e.touches[0].clientX;
-                lastY = e.touches[0].clientY;
-              }
-            });
-            window.addEventListener('touchmove', function(e) {
-              if (!dragging || !window.sceneObj) return;
-              let deltaX = e.touches[0].clientX - lastX;
-              let deltaY = e.touches[0].clientY - lastY;
-              window.sceneObj.rotation.y += deltaX * 0.01;
-              window.sceneObj.rotation.x += deltaY * 0.01;
-              lastX = e.touches[0].clientX;
-              lastY = e.touches[0].clientY;
-              e.preventDefault(); // スクロール防止
-            }, { passive: false });
-            window.addEventListener('touchend', function(e) {
-              dragging = false;
-            });
-
-            // ピンチスケール用
-            let pinchStartDist = null;
-            let startScale = 0.5; // ここはsceneObj.scale.xの初期値と合わせる
-
-            window.addEventListener('touchstart', function(e) {
-              // 2本指タッチ開始で距離を保存
-              if (e.touches.length === 2 && window.sceneObj) {
-                pinchStartDist = Math.hypot(
-                  e.touches[0].clientX - e.touches[1].clientX,
-                  e.touches[0].clientY - e.touches[1].clientY
-                );
-                startScale = window.sceneObj.scale.x; // 現在のスケール
-              }
-            });
-            window.addEventListener('touchmove', function(e) {
-              // 2本指でピンチ操作中
-              if (e.touches.length === 2 && pinchStartDist && window.sceneObj) {
-                let dist = Math.hypot(
-                  e.touches[0].clientX - e.touches[1].clientX,
-                  e.touches[0].clientY - e.touches[1].clientY
-                );
-                let scale = startScale * (dist / pinchStartDist);
-                // スケールの最小最大制限
-                scale = Math.max(0.2, Math.min(3.0, scale));
-                window.sceneObj.scale.set(scale, scale, scale);
-                e.preventDefault(); // ページスクロール防止
-              }
-            }, { passive: false });
-
-            window.addEventListener('touchend', function(e) {
-              // 2本指離したらピンチリセット
-              if (e.touches.length < 2) pinchStartDist = null;
-            });
-
-            // ★ GLTFのロード終了時にローディングを消す
-            // hideLoadingModal();
-            setTimeout(hideLoadingModal, 5000); //デバッグ用 5秒表示させる
-          },
-          (xhr) => {
-            // ローディング進捗に応じて動画同期
-            let progress = xhr.loaded / xhr.total;
-            setLoadingProgress(progress);
-          },
-          (error) => {
-            console.error('3Dモデルの読み込み中にエラーが発生しました:', error);
+          );
+        }
+  
+        // 最初の表示：AvatarModel0
+        loadAvatarModel('./assets/models/AvatarModel0.glb');
+  
+        // seg1/seg2タップでモデル切り替え
+        document.querySelector('.seg1').addEventListener('pointerdown', () => {
+          loadAvatarModel('./assets/models/AvatarModel0.glb');
+        });
+        document.querySelector('.seg2').addEventListener('pointerdown', () => {
+          loadAvatarModel('./assets/models/AvatarModel1.glb');
+        });
+  
+        // ドラッグで回転
+        let dragging = false;
+        let lastX = 0, lastY = 0;
+        window.addEventListener('touchstart', function(e) {
+          if (e.touches.length === 1) {
+            dragging = true;
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
           }
-        );
-
-        // ターゲット検出時のイベント
+        });
+        window.addEventListener('touchmove', function(e) {
+          if (!dragging || !window.sceneObj) return;
+          let deltaX = e.touches[0].clientX - lastX;
+          let deltaY = e.touches[0].clientY - lastY;
+          window.sceneObj.rotation.y += deltaX * 0.01;
+          window.sceneObj.rotation.x += deltaY * 0.01;
+          lastX = e.touches[0].clientX;
+          lastY = e.touches[0].clientY;
+          e.preventDefault();
+        }, { passive: false });
+        window.addEventListener('touchend', function(e) {
+          dragging = false;
+        });
+  
+        // ピンチ拡大縮小
+        let pinchStartDist = null;
+        let startScale = 0.5;
+        window.addEventListener('touchstart', function(e) {
+          if (e.touches.length === 2 && window.sceneObj) {
+            pinchStartDist = Math.hypot(
+              e.touches[0].clientX - e.touches[1].clientX,
+              e.touches[0].clientY - e.touches[1].clientY
+            );
+            startScale = window.sceneObj.scale.x;
+          }
+        });
+        window.addEventListener('touchmove', function(e) {
+          if (e.touches.length === 2 && pinchStartDist && window.sceneObj) {
+            let dist = Math.hypot(
+              e.touches[0].clientX - e.touches[1].clientX,
+              e.touches[0].clientY - e.touches[1].clientY
+            );
+            let scale = startScale * (dist / pinchStartDist);
+            scale = Math.max(0.2, Math.min(3.0, scale));
+            window.sceneObj.scale.set(scale, scale, scale);
+            e.preventDefault();
+          }
+        }, { passive: false });
+        window.addEventListener('touchend', function(e) {
+          if (e.touches.length < 2) pinchStartDist = null;
+        });
+  
+        // スキャンUIの出し入れ
         anchor.onTargetFound = () => {
           scanningUI.style.display = 'none';
         };
         anchor.onTargetLost = () => {
           scanningUI.style.display = 'block';
         };
-
+  
         await mindarThree.start();
-        scanningUI.style.display = 'block'; // AR開始時にスキャンUIを表示
-
+        scanningUI.style.display = 'block';
+  
         renderer.setAnimationLoop(() => {
           renderer.render(scene, camera);
         });
-
+  
+        // ローディング消去（デバッグ用5秒）
+        setTimeout(hideLoadingModal, 5000);
+  
         window.addEventListener('beforeunload', () => {
           mindarThree.stop();
         });
-
+  
       } catch (error) {
-        console.error('WebARの初期化中にエラーが発生しました:', error);
-        // 万一エラー時はローディングモーダルも非表示に
+        console.error('WebARの初期化中にエラーが発生:', error);
         hideLoadingModal();
       }
     });

@@ -97,7 +97,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.0</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.1</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -185,6 +185,7 @@
           (gltf) => {
             const model = gltf;
             const sceneObj = model.scene;
+            window.sceneObj = sceneObj; // ←グローバル化して他からもアクセス可
 
             // 初期設定
             sceneObj.scale.set(0.5, 0.5, 0.5);
@@ -201,35 +202,50 @@
               video.play();
            }
 
-            // dat.GUIの設定
-            const initialValues = {
-              posX: 0,
-              posY: 0,
-              posZ: 0,
-              rotX: Math.PI / 2,
-              rotY: 0,
-              rotZ: 0,
-              scale: 0.5
-            };
-            const controls = { ...initialValues };
+            // ドラッグ回転用
+            let dragging = false;
+            let lastX = 0, lastY = 0;
 
-            const gui = new dat.GUI();
-            gui.close(); // 初期状態は折りたたみ
+            // タッチ操作
+            window.addEventListener('touchstart', function(e) {
+              if (e.touches.length === 1) {
+                dragging = true;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+              }
+            });
+            window.addEventListener('touchmove', function(e) {
+              if (!dragging || !window.sceneObj) return;
+              let deltaX = e.touches[0].clientX - lastX;
+              let deltaY = e.touches[0].clientY - lastY;
+              window.sceneObj.rotation.y += deltaX * 0.01;
+              window.sceneObj.rotation.x += deltaY * 0.01;
+              lastX = e.touches[0].clientX;
+              lastY = e.touches[0].clientY;
+              e.preventDefault(); // スクロール防止
+            }, { passive: false });
+            window.addEventListener('touchend', function(e) {
+              dragging = false;
+            });
 
-            gui.add(controls, 'posX', -2, 2).onChange(v => sceneObj.position.x = v);
-            gui.add(controls, 'posY', -2, 2).onChange(v => sceneObj.position.y = v);
-            gui.add(controls, 'posZ', -2, 2).onChange(v => sceneObj.position.z = v);
-            gui.add(controls, 'rotX', 0, Math.PI * 2).onChange(v => sceneObj.rotation.x = v);
-            gui.add(controls, 'rotY', 0, Math.PI * 2).onChange(v => sceneObj.rotation.y = v);
-            gui.add(controls, 'rotZ', 0, Math.PI * 2).onChange(v => sceneObj.rotation.z = v);
-            gui.add(controls, 'scale', 0.1, 3).onChange(v => sceneObj.scale.set(v, v, v));
-            gui.add({ reset: () => {
-              Object.assign(controls, initialValues);
-              sceneObj.position.set(controls.posX, controls.posY, controls.posZ);
-              sceneObj.rotation.set(controls.rotX, controls.rotY, controls.rotZ);
-              sceneObj.scale.set(controls.scale, controls.scale, controls.scale);
-              gui.__controllers.forEach(c => c.updateDisplay());
-            }}, 'reset').name("Reset to Default");
+            // 任意: PC用マウス対応もしたい場合
+            window.addEventListener('mousedown', function(e) {
+              dragging = true;
+              lastX = e.clientX;
+              lastY = e.clientY;
+            });
+            window.addEventListener('mousemove', function(e) {
+              if (!dragging || !window.sceneObj) return;
+              let deltaX = e.clientX - lastX;
+              let deltaY = e.clientY - lastY;
+              window.sceneObj.rotation.y += deltaX * 0.01;
+              window.sceneObj.rotation.x += deltaY * 0.01;
+              lastX = e.clientX;
+              lastY = e.clientY;
+            });
+            window.addEventListener('mouseup', function(e) {
+              dragging = false;
+            });
 
             // ★ GLTFのロード終了時にローディングを消す
             // hideLoadingModal();

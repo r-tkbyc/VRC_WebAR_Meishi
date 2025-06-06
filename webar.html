@@ -298,7 +298,7 @@
 
         // ターゲット検出時のイベント
         anchor.onTargetFound = () => {
-          // scanningUI.style.display = 'none';
+          scanningUI.style.display = 'none';
           // ターゲット発見時、現在の値を初期化
           visibleObj.position.copy(anchor.group.position);
           visibleObj.quaternion.copy(anchor.group.quaternion);

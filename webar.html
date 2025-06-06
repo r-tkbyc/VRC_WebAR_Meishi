@@ -205,7 +205,7 @@
           (gltf) => {
             const model = gltf;
             const sceneObj = model.scene;
-            window.sceneObj = sceneObj; // ←グローバル化して他からもアクセス可
+            window.sceneObj = sceneObj; // グローバル化
 
             // 初期設定
             sceneObj.scale.set(0.5, 0.5, 0.5);
@@ -215,13 +215,14 @@
             // モデルをアンカーに追加
             anchor.group.add(sceneObj);
 
-            // --- アニメーション再生 ---
+            // --- アニメーション再生（Anime1のみ） ---
             let mixer;
             if (gltf.animations && gltf.animations.length > 0) {
               mixer = new THREE.AnimationMixer(sceneObj);
-              gltf.animations.forEach(clip => {
-                mixer.clipAction(clip).play();
-              });
+              const anime1Clip = gltf.animations.find(clip => clip.name === "Anime1");
+              if (anime1Clip) {
+                mixer.clipAction(anime1Clip).play();
+              }
             }
 
             // setAnimationLoopでmixer.updateも呼ぶ

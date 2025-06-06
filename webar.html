@@ -119,11 +119,11 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.3.0</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.3.1</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
-    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.8</p>
+    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.9</p>
     <div class="loading-bg"></div>
     <video
       id="loadingVideo"
@@ -338,9 +338,6 @@
         renderer.setAnimationLoop(() => {
           renderer.render(scene, camera);
         });
-  
-        // ローディング消去（デバッグ用5秒）
-        setTimeout(hideLoadingModal, 5000);
   
         window.addEventListener('beforeunload', () => {
           mindarThree.stop();

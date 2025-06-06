@@ -111,7 +111,7 @@
     .action-seg {
       position: absolute;
       pointer-events: auto;
-      /* デバッグ時はbackground:rgba(255,0,0,0.1)等つけると領域が見える */
+      background:rgb(255, 0, 0); /* デバッグ時は(255,0,0,0.1)で領域が見える */
     }
     .seg1 { left: 0%;  top: 0; width: 33.3%; height: 100%; }
     .seg2 { left: 33.3%; top: 0; width: 33.3%; height: 100%; }
@@ -119,11 +119,11 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.2.0</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.2.1</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
-    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.3</p>
+    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.4</p>
     <div class="loading-bg"></div>
     <video
       id="loadingVideo"
@@ -140,7 +140,7 @@
   </div>
 
   <div class="action-menu-area">
-    <img src="./assets/images/ActionMenu1_ClickArea.png" class="action-menu-img" alt="ActionMenu1" />
+    <img src="./assets/images/ActionMenu1.png" class="action-menu-img" alt="ActionMenu1" />
     <div class="action-seg seg1"></div>
     <div class="action-seg seg2"></div>
     <div class="action-seg seg3"></div>

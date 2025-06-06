@@ -113,7 +113,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.0</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.1</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -322,8 +322,8 @@
           targetQuat.copy(anchor.group.quaternion);
 
           // “イージング”でスムージング
-          visibleObj.position.lerp(targetPos, 0.2); // 0.1〜0.3くらいが自然
-          visibleObj.quaternion.slerp(targetQuat, 0.2);
+          visibleObj.position.lerp(targetPos, 0.1); // 0.1〜0.3くらいが自然
+          visibleObj.quaternion.slerp(targetQuat, 0.1);
 
           renderer.render(scene, camera);
         });

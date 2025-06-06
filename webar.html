@@ -113,11 +113,11 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.6</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.7</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
-    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.1</p>
+    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.2</p>
     <div class="loading-bg"></div>
     <video
       id="loadingVideo"
@@ -201,77 +201,115 @@
         const loader = new THREE.GLTFLoader();
 
         loader.load(
-        "./assets/model/KuromojiBase.glb",
-        (gltf) => {
-          const model = gltf;
-          const sceneObj = model.scene;
-          window.sceneObj = sceneObj; // グローバル
+          "./assets/model/KuromojiBase.glb",
+          (gltf) => {
+            const model = gltf;
+            const sceneObj = model.scene;
+            window.sceneObj = sceneObj; // グローバル化
 
-          // 1. ユーザー操作用グループを作る
-          const userGroup = new THREE.Group();
-          anchor.group.add(userGroup);
-          userGroup.add(sceneObj);
+            // 初期設定
+            sceneObj.scale.set(0.5, 0.5, 0.5);
+            sceneObj.rotation.set(Math.PI / 2, 0, 0);
+            sceneObj.position.set(0, 0, 0);
 
-          // 初期設定（userGroupは0回転、sceneObjも0回転にするのが基本）
-          userGroup.rotation.set(0, 0, 0);
-          sceneObj.scale.set(0.5, 0.5, 0.5);
-          sceneObj.rotation.set(0, 0, 0);
-          sceneObj.position.set(0, 0, 0);
+            // モデルをアンカーに追加
+            anchor.group.add(sceneObj);
 
-          // 2. ドラッグ操作はuserGroupに対してだけ
-          let isDragging = false, lastX = 0, lastY = 0;
-          let startRotX = 0, startRotY = 0;
-          // タッチ
-          window.addEventListener('touchstart', e => {
-            if (e.touches.length === 1) {
-              isDragging = true;
+            // ローディング完了時、動画を先頭から1回再生
+            if (video.readyState >= 1) {
+              video.currentTime = 0;
+              video.muted = true; // モバイル自動再生用（念のため）
+              video.play();
+           }
+
+            // ドラッグ回転用
+            let dragging = false;
+            let lastX = 0, lastY = 0;
+
+            // ドラッグ回転用のタッチ操作
+            window.addEventListener('touchstart', function(e) {
+              if (e.touches.length === 1) {
+                dragging = true;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+              }
+            });
+            window.addEventListener('touchmove', function(e) {
+              if (!dragging || !window.sceneObj) return;
+              let deltaX = e.touches[0].clientX - lastX;
+              let deltaY = e.touches[0].clientY - lastY;
+              window.sceneObj.rotation.y += deltaX * 0.01;
+              window.sceneObj.rotation.x += deltaY * 0.01;
               lastX = e.touches[0].clientX;
               lastY = e.touches[0].clientY;
-              startRotX = userGroup.rotation.x;
-              startRotY = userGroup.rotation.y;
-            }
-          });
-          window.addEventListener('touchmove', e => {
-            if (isDragging && e.touches.length === 1) {
-              const dx = (e.touches[0].clientX - lastX) * 0.01;
-              const dy = (e.touches[0].clientY - lastY) * 0.01;
-              userGroup.rotation.y = startRotY + dx;
-              userGroup.rotation.x = startRotX + dy;
-            }
-          });
-          window.addEventListener('touchend', () => isDragging = false);
+              e.preventDefault(); // スクロール防止
+            }, { passive: false });
+            window.addEventListener('touchend', function(e) {
+              dragging = false;
+            });
 
-          // PC対応（マウス）
-          window.addEventListener('mousedown', e => {
-            isDragging = true;
-            lastX = e.clientX;
-            lastY = e.clientY;
-            startRotX = userGroup.rotation.x;
-            startRotY = userGroup.rotation.y;
-          });
-          window.addEventListener('mousemove', e => {
-            if (isDragging) {
-              const dx = (e.clientX - lastX) * 0.01;
-              const dy = (e.clientY - lastY) * 0.01;
-              userGroup.rotation.y = startRotY + dx;
-              userGroup.rotation.x = startRotX + dy;
-            }
-          });
-          window.addEventListener('mouseup', () => isDragging = false);
+            // ピンチスケール用
+            let pinchStartDist = null;
+            let startScale = 0.5; // ここはsceneObj.scale.xの初期値と合わせる
 
-          // 3. スムージング（lerp/slerp）はanchor.groupのみ
-          let targetPos = new THREE.Vector3();
-          let targetQuat = new THREE.Quaternion();
+            window.addEventListener('touchstart', function(e) {
+              // 2本指タッチ開始で距離を保存
+              if (e.touches.length === 2 && window.sceneObj) {
+                pinchStartDist = Math.hypot(
+                  e.touches[0].clientX - e.touches[1].clientX,
+                  e.touches[0].clientY - e.touches[1].clientY
+                );
+                startScale = window.sceneObj.scale.x; // 現在のスケール
+              }
+            });
+            window.addEventListener('touchmove', function(e) {
+              // 2本指でピンチ操作中
+              if (e.touches.length === 2 && pinchStartDist && window.sceneObj) {
+                let dist = Math.hypot(
+                  e.touches[0].clientX - e.touches[1].clientX,
+                  e.touches[0].clientY - e.touches[1].clientY
+                );
+                let scale = startScale * (dist / pinchStartDist);
+                // スケールの最小最大制限
+                scale = Math.max(0.2, Math.min(3.0, scale));
+                window.sceneObj.scale.set(scale, scale, scale);
+                e.preventDefault(); // ページスクロール防止
+              }
+            }, { passive: false });
 
-          renderer.setAnimationLoop(() => {
-            targetPos.copy(anchor.group.position);
-            targetQuat.copy(anchor.group.quaternion);
+            window.addEventListener('touchend', function(e) {
+              // 2本指離したらピンチリセット
+              if (e.touches.length < 2) pinchStartDist = null;
+            });
 
-            anchor.group.position.lerp(targetPos, 0.2);
-            anchor.group.quaternion.slerp(targetQuat, 0.2);
+            // ★ GLTFのロード終了時にローディングを消す
+            // hideLoadingModal();
+            setTimeout(hideLoadingModal, 5000); //デバッグ用 5秒表示させる
+          },
+          (xhr) => {
+            // ローディング進捗に応じて動画同期
+            let progress = xhr.loaded / xhr.total;
+            setLoadingProgress(progress);
+          },
+          (error) => {
+            console.error('3Dモデルの読み込み中にエラーが発生しました:', error);
+          }
+        );
 
-            renderer.render(scene, camera);
-          });
+        // ターゲット検出時のイベント
+        anchor.onTargetFound = () => {
+          scanningUI.style.display = 'none';
+        };
+        anchor.onTargetLost = () => {
+          scanningUI.style.display = 'block';
+        };
+
+        await mindarThree.start();
+        scanningUI.style.display = 'block'; // AR開始時にスキャンUIを表示
+
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
 
         window.addEventListener('beforeunload', () => {
           mindarThree.stop();
@@ -284,6 +322,5 @@
       }
     });
   </script>
-
 </body>
 </html>

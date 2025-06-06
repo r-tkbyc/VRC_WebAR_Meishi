@@ -113,7 +113,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.3</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.5</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -151,34 +151,30 @@
     const modal = document.getElementById('loadingModal');
     const loadingText = document.getElementById('loadingText');
 
-    // 進捗同期関数（0〜1）
     function setLoadingProgress(progress) {
       if (video.readyState >= 1 && video.duration) {
         video.currentTime = progress * video.duration;
       }
     }
 
-    // フェードアウト
     function hideLoadingModal() {
       modal.classList.add('fade-out');
       setTimeout(() => modal.style.display = 'none', 800);
     }
 
-    // 動画初期化
     video.addEventListener('loadedmetadata', ()=>{
       video.currentTime = 0;
       video.pause();
       setLoadingProgress(0);
     });
 
-    // -------------------------------
     document.addEventListener("DOMContentLoaded", async () => {
       try {
         const mindarThree = new window.MINDAR.IMAGE.MindARThree({
           container: document.querySelector("#container"),
           imageTargetSrc: "./assets/target/targets.mind",
-          uiScanning: true, // スキャンUIを有効化
-          uiLoading: true, // ローディングUIを有効化
+          uiScanning: true,
+          uiLoading: true,
         });
 
         const {renderer, scene, camera} = mindarThree;
@@ -187,17 +183,13 @@
 
         const light = new THREE.AmbientLight(0xffffff, 1.0);
         scene.add(light);
-
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
         directionalLight.position.set(0, 1, 1);
         scene.add(directionalLight);
 
         const anchor = mindarThree.addAnchor(0);
 
-        // ローディング画面とスキャンUIの要素
         const scanningUI = document.getElementById('scanning');
-
-        // GLTFローダーの作成と3Dモデルの読み込み
         const loader = new THREE.GLTFLoader();
 
         loader.load(
@@ -205,89 +197,76 @@
           (gltf) => {
             const model = gltf;
             const sceneObj = model.scene;
-            window.sceneObj = sceneObj; // グローバル化
+            window.sceneObj = sceneObj;
+
+            // ★ A案：ユーザー操作用グループを作る
+            const userGroup = new THREE.Group();
+            anchor.group.add(userGroup);
+            userGroup.add(sceneObj);
 
             // 初期設定
             sceneObj.scale.set(0.5, 0.5, 0.5);
-            sceneObj.rotation.set(Math.PI / 2, 0, 0);
+            sceneObj.rotation.set(0, 0, 0);
             sceneObj.position.set(0, 0, 0);
+            userGroup.rotation.set(Math.PI / 2, 0, 0); // 旧sceneObjの初期回転
 
-            // モデルをアンカーに追加
-            anchor.group.add(sceneObj);
-
-            // ローディング完了時、動画を先頭から1回再生
-            if (video.readyState >= 1) {
-              video.currentTime = 0;
-              video.muted = true; // モバイル自動再生用（念のため）
-              video.play();
-           }
-
-            // ドラッグ回転用
+            // ドラッグ回転は userGroup にだけ
             let dragging = false;
             let lastX = 0, lastY = 0;
-
-            // ドラッグ回転用のタッチ操作
+            let startRotX = 0, startRotY = 0;
             window.addEventListener('touchstart', function(e) {
               if (e.touches.length === 1) {
                 dragging = true;
                 lastX = e.touches[0].clientX;
                 lastY = e.touches[0].clientY;
+                startRotX = userGroup.rotation.x;
+                startRotY = userGroup.rotation.y;
               }
             });
             window.addEventListener('touchmove', function(e) {
-              if (!dragging || !window.sceneObj) return;
+              if (!dragging) return;
               let deltaX = e.touches[0].clientX - lastX;
               let deltaY = e.touches[0].clientY - lastY;
-              window.sceneObj.rotation.y += deltaX * 0.01;
-              window.sceneObj.rotation.x += deltaY * 0.01;
-              lastX = e.touches[0].clientX;
-              lastY = e.touches[0].clientY;
-              e.preventDefault(); // スクロール防止
+              userGroup.rotation.y = startRotY + deltaX * 0.01;
+              userGroup.rotation.x = startRotX + deltaY * 0.01;
+              e.preventDefault();
             }, { passive: false });
             window.addEventListener('touchend', function(e) {
               dragging = false;
             });
 
-            // ピンチスケール用
+            // ピンチスケールはsceneObjに
             let pinchStartDist = null;
-            let startScale = 0.5; // ここはsceneObj.scale.xの初期値と合わせる
-
+            let startScale = 0.5;
             window.addEventListener('touchstart', function(e) {
-              // 2本指タッチ開始で距離を保存
-              if (e.touches.length === 2 && window.sceneObj) {
+              if (e.touches.length === 2) {
                 pinchStartDist = Math.hypot(
                   e.touches[0].clientX - e.touches[1].clientX,
                   e.touches[0].clientY - e.touches[1].clientY
                 );
-                startScale = window.sceneObj.scale.x; // 現在のスケール
+                startScale = sceneObj.scale.x;
               }
             });
             window.addEventListener('touchmove', function(e) {
-              // 2本指でピンチ操作中
-              if (e.touches.length === 2 && pinchStartDist && window.sceneObj) {
+              if (e.touches.length === 2 && pinchStartDist) {
                 let dist = Math.hypot(
                   e.touches[0].clientX - e.touches[1].clientX,
                   e.touches[0].clientY - e.touches[1].clientY
                 );
                 let scale = startScale * (dist / pinchStartDist);
-                // スケールの最小最大制限
                 scale = Math.max(0.2, Math.min(3.0, scale));
-                window.sceneObj.scale.set(scale, scale, scale);
-                e.preventDefault(); // ページスクロール防止
+                sceneObj.scale.set(scale, scale, scale);
+                e.preventDefault();
               }
             }, { passive: false });
-
             window.addEventListener('touchend', function(e) {
-              // 2本指離したらピンチリセット
               if (e.touches.length < 2) pinchStartDist = null;
             });
 
             // ★ GLTFのロード終了時にローディングを消す
-            // hideLoadingModal();
-            setTimeout(hideLoadingModal, 5000); //デバッグ用 5秒表示させる
+            setTimeout(hideLoadingModal, 5000); //デバッグ用
           },
           (xhr) => {
-            // ローディング進捗に応じて動画同期
             let progress = xhr.loaded / xhr.total;
             setLoadingProgress(progress);
           },
@@ -305,9 +284,20 @@
         };
 
         await mindarThree.start();
-        scanningUI.style.display = 'block'; // AR開始時にスキャンUIを表示
+        scanningUI.style.display = 'block';
+
+        // A案：anchor.groupだけスムージング
+        let targetPos = new THREE.Vector3();
+        let targetQuat = new THREE.Quaternion();
 
         renderer.setAnimationLoop(() => {
+          if (!anchor.group) return;
+          targetPos.copy(anchor.group.position);
+          targetQuat.copy(anchor.group.quaternion);
+
+          anchor.group.position.lerp(targetPos, 0.1);
+          anchor.group.quaternion.slerp(targetQuat, 0.1);
+
           renderer.render(scene, camera);
         });
 
@@ -317,10 +307,10 @@
 
       } catch (error) {
         console.error('WebARの初期化中にエラーが発生しました:', error);
-        // 万一エラー時はローディングモーダルも非表示に
         hideLoadingModal();
       }
     });
   </script>
+
 </body>
 </html>

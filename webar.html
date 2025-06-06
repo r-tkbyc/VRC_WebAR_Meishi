@@ -113,7 +113,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.5</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.6</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -214,6 +214,22 @@
 
             // モデルをアンカーに追加
             anchor.group.add(sceneObj);
+
+            // --- アニメーション再生 ---
+            let mixer;
+            if (gltf.animations && gltf.animations.length > 0) {
+              mixer = new THREE.AnimationMixer(sceneObj);
+              gltf.animations.forEach(clip => {
+                mixer.clipAction(clip).play();
+              });
+            }
+
+            // setAnimationLoopでmixer.updateも呼ぶ
+            let clock = new THREE.Clock();
+            renderer.setAnimationLoop(() => {
+              if (mixer) mixer.update(clock.getDelta());
+              renderer.render(scene, camera);
+            });
 
             // ローディング完了時、動画を先頭から1回再生
             if (video.readyState >= 1) {

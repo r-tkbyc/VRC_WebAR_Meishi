@@ -123,7 +123,7 @@
 </head>
 
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.4.1</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.4.2</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -139,6 +139,7 @@
       muted
       tabindex="-1"
       poster=""
+      autoplay
     ></video>
   </div>
 
@@ -179,7 +180,8 @@
 
     video.addEventListener('loadedmetadata', ()=>{
       video.currentTime = 0;
-      video.pause();
+      video.muted = true;
+      video.play();
       setLoadingProgress(0);
     });
 

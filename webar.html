@@ -219,7 +219,7 @@
             let mixer;
             if (gltf.animations && gltf.animations.length > 0) {
               mixer = new THREE.AnimationMixer(sceneObj);
-              const anime1Clip = gltf.animations.find(clip => clip.name === "Anime1");
+              const anime1Clip = gltf.animations.find(clip => clip.name == "Anime1");
               if (anime1Clip) {
                 mixer.clipAction(anime1Clip).play();
               }

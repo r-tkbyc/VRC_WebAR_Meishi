@@ -97,7 +97,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.1</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.2</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -206,7 +206,7 @@
             let dragging = false;
             let lastX = 0, lastY = 0;
 
-            // タッチ操作
+            // ドラッグ回転用のタッチ操作
             window.addEventListener('touchstart', function(e) {
               if (e.touches.length === 1) {
                 dragging = true;
@@ -228,23 +228,38 @@
               dragging = false;
             });
 
-            // 任意: PC用マウス対応もしたい場合
-            window.addEventListener('mousedown', function(e) {
-              dragging = true;
-              lastX = e.clientX;
-              lastY = e.clientY;
+            // ピンチスケール用
+            let pinchStartDist = null;
+            let startScale = 0.5; // ここはsceneObj.scale.xの初期値と合わせる
+
+            window.addEventListener('touchstart', function(e) {
+              // 2本指タッチ開始で距離を保存
+              if (e.touches.length === 2 && window.sceneObj) {
+                pinchStartDist = Math.hypot(
+                  e.touches[0].clientX - e.touches[1].clientX,
+                  e.touches[0].clientY - e.touches[1].clientY
+                );
+                startScale = window.sceneObj.scale.x; // 現在のスケール
+              }
             });
-            window.addEventListener('mousemove', function(e) {
-              if (!dragging || !window.sceneObj) return;
-              let deltaX = e.clientX - lastX;
-              let deltaY = e.clientY - lastY;
-              window.sceneObj.rotation.y += deltaX * 0.01;
-              window.sceneObj.rotation.x += deltaY * 0.01;
-              lastX = e.clientX;
-              lastY = e.clientY;
-            });
-            window.addEventListener('mouseup', function(e) {
-              dragging = false;
+            window.addEventListener('touchmove', function(e) {
+              // 2本指でピンチ操作中
+              if (e.touches.length === 2 && pinchStartDist && window.sceneObj) {
+                let dist = Math.hypot(
+                  e.touches[0].clientX - e.touches[1].clientX,
+                  e.touches[0].clientY - e.touches[1].clientY
+                );
+                let scale = startScale * (dist / pinchStartDist);
+                // スケールの最小最大制限
+                scale = Math.max(0.2, Math.min(3.0, scale));
+                window.sceneObj.scale.set(scale, scale, scale);
+                e.preventDefault(); // ページスクロール防止
+              }
+            }, { passive: false });
+
+            window.addEventListener('touchend', function(e) {
+              // 2本指離したらピンチリセット
+              if (e.touches.length < 2) pinchStartDist = null;
             });
 
             // ★ GLTFのロード終了時にローディングを消す

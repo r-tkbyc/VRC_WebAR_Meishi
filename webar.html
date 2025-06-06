@@ -94,10 +94,26 @@
       50% { top: 100%; }
       100% { top: 0px; }
     }
+    .menu1-area {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 80vw;
+      max-width: 600px;
+      height: auto;
+      z-index: 1200;
+      pointer-events: none;
+    }
+    .menu1-clickarea {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.2</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.3</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -115,6 +131,10 @@
       poster=""
       autoplay
     ></video>
+  </div>
+
+  <div class="menu1-area">
+    <img src="./assets/images/Menu1_ClickArea.png" class="menu1-clickarea" alt="Menu" />
   </div>
 
   <div id="container"></div>

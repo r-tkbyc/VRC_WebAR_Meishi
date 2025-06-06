@@ -119,11 +119,11 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.2.8</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.2.9</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
-    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.6</p>
+    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.7</p>
     <div class="loading-bg"></div>
     <video
       id="loadingVideo"
@@ -173,11 +173,34 @@
     }
   
     // 動画初期化
-    video.addEventListener('loadedmetadata', ()=>{
+    video.addEventListener('loadedmetadata', () => {
       video.currentTime = 0;
       video.pause();
       setLoadingProgress(0);
     });
+
+    // 「再生開始」を検知
+    video.addEventListener('play', () => {
+      // 必ず5秒後にローディングを消す（この5秒は動画の長さに合わせる）
+      setTimeout(hideLoadingModal, 5000);
+    });
+
+    // GLTFロードが終わったら動画再生開始
+    function onModelLoaded() {
+      if (video.readyState >= 2) { // HAVE_CURRENT_DATA以上
+        video.currentTime = 0;
+        video.muted = true;
+        video.play();
+      } else {
+        // 動画の読み込みが遅れている場合も考慮
+        video.addEventListener('canplay', function handler() {
+          video.removeEventListener('canplay', handler);
+          video.currentTime = 0;
+          video.muted = true;
+          video.play();
+        });
+      }
+    }
   
     document.addEventListener("DOMContentLoaded", async () => {
       try {
@@ -226,14 +249,7 @@
               window.sceneObj = model;
   
               // 初回のみローディング動画再生
-              if (!window._avatarLoadedOnce) {
-                if (video.readyState >= 1) {
-                  video.currentTime = 0;
-                  video.muted = true;
-                  video.play();
-                }
-                window._avatarLoadedOnce = true;
-              }
+              onModelLoaded();
             },
             (xhr) => {
               let progress = xhr.loaded / xhr.total;

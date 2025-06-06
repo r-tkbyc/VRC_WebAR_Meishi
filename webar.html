@@ -94,26 +94,32 @@
       50% { top: 100%; }
       100% { top: 0px; }
     }
-    .act-menu1-area {
+    .action-menu-area {
       position: fixed;
       left: 50%;
       bottom: 0;
       transform: translateX(-50%);
       width: 80vw;
       max-width: 600px;
-      height: auto;
       z-index: 1200;
       pointer-events: none;
     }
-    .act-menu1 {
+    .action-menu-img {
       width: 100%;
-      height: auto;
       display: block;
     }
+    .action-seg {
+      position: absolute;
+      pointer-events: auto;
+      /* デバッグ時はbackground:rgba(255,0,0,0.1)等つけると領域が見える */
+    }
+    .seg1 { left: 0%;  top: 0; width: 33.3%; height: 100%; }
+    .seg2 { left: 33.3%; top: 0; width: 33.3%; height: 100%; }
+    .seg3 { left: 66.6%; top: 0; width: 33.3%; height: 100%; }
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.7</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.8</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -133,8 +139,11 @@
     ></video>
   </div>
 
-  <div class="act-menu1-area">
-    <img src="./assets/images/ActionMenu1_ClickArea.png" class="act-menu1" alt="ActionMenu1" />
+  <div class="action-menu-area">
+    <img src="./assets/images/ActionMenu1_ClickArea.png" class="action-menu-img" alt="ActionMenu1" />
+    <div class="action-seg seg1"></div>
+    <div class="action-seg seg2"></div>
+    <div class="action-seg seg3"></div>
   </div>
 
   <div id="container"></div>
@@ -207,13 +216,36 @@
             const sceneObj = model.scene;
             window.sceneObj = sceneObj; // グローバル化
 
-            // 初期設定
-            sceneObj.scale.set(0.5, 0.5, 0.5);
-            sceneObj.rotation.set(Math.PI / 2, 0, 0);
-            sceneObj.position.set(0, 0, 0);
+            let currentModel = null;
 
-            // モデルをアンカーに追加
-            anchor.group.add(sceneObj);
+            // モデルロード・切り替え
+            function loadAvatarModel(glbPath) {
+              if (currentModel && anchor.group.children.includes(currentModel)) {
+                anchor.group.remove(currentModel);
+              }
+              loader.load(
+                glbPath,
+                (gltf) => {
+                  const model = gltf.scene;
+                  model.scale.set(0.5, 0.5, 0.5);
+                  model.rotation.set(Math.PI / 2, 0, 0);
+                  model.position.set(0, 0, 0);
+                  anchor.group.add(model);
+                  currentModel = model;
+                }
+              );
+            }
+
+            // 初期表示でアバター0
+            loadAvatarModel('./assets/models/AvatarModel0.glb');
+
+            // タップで切り替え
+            document.querySelector('.seg1').addEventListener('pointerdown', () => {
+              loadAvatarModel('./assets/models/AvatarModel0.glb');
+            });
+            document.querySelector('.seg2').addEventListener('pointerdown', () => {
+              loadAvatarModel('./assets/models/AvatarModel1.glb');
+            });
 
             // ローディング完了時、動画を先頭から1回再生
             if (video.readyState >= 1) {

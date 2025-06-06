@@ -94,25 +94,39 @@
       50% { top: 100%; }
       100% { top: 0px; }
     }
-    .menu1-clickarea {
+    .menu1-area {
       position: fixed;
       left: 50%;
       bottom: 0;
       transform: translateX(-50%);
       width: 80vw;
-      /* max-width: 600px; 必要に応じて最大幅調整、不要なら削除OK */
+      max-width: 600px;
       height: auto;
       z-index: 1200;
-      pointer-events: none;
-      user-select: none;
-      margin: 0;   /* 余白完全カット */
-      padding: 0;
+      pointer-events: none; /* 子要素には手を通すため */
     }
+    .menu1-clickarea {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .seg {
+      position: absolute;
+      pointer-events: auto;
+      background: rgba(255,0,0,1); /* 背景色をrgba(255,0,0,0.1)などにすると領域のデバッグ可 */
+    }
+    /* 例：セグメントごとにtop/left/width/heightで重ねる */
+    .seg1 { left:0; top:50%; width:30%; height:50%; }
+    .seg2 { left:30%; top:0; width:20%; height:50%; }
+    .seg3 { left:50%; top:0; width:20%; height:50%; }
+    .seg4 { left:70%; top:50%; width:30%; height:50%; }
+    .seg5 { display:none; }
+    .seg6 { right:0; top:0; width:15%; height:25%; }
   </style>
 </head>
 
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.5</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.7</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -216,35 +230,47 @@
               video.play();
            }
 
-            // dat.GUIの設定
-            const initialValues = {
-              posX: 0,
-              posY: 0,
-              posZ: 0,
-              rotX: Math.PI / 2,
-              rotY: 0,
-              rotZ: 0,
-              scale: 0.5
-            };
-            const controls = { ...initialValues };
+            // モデル操作
+            let rotateYminus = false, rotateYplus = false, rotateXminus = false, rotateXplus = false;
 
-            const gui = new dat.GUI();
-            gui.close(); // 初期状態は折りたたみ
+            // 押しっぱなしで回転フラグ
+            document.querySelector('.seg1').addEventListener('pointerdown', () => rotateYminus = true);
+            document.querySelector('.seg1').addEventListener('pointerup',   () => rotateYminus = false);
+            document.querySelector('.seg1').addEventListener('pointerleave',() => rotateYminus = false);
 
-            gui.add(controls, 'posX', -2, 2).onChange(v => sceneObj.position.x = v);
-            gui.add(controls, 'posY', -2, 2).onChange(v => sceneObj.position.y = v);
-            gui.add(controls, 'posZ', -2, 2).onChange(v => sceneObj.position.z = v);
-            gui.add(controls, 'rotX', 0, Math.PI * 2).onChange(v => sceneObj.rotation.x = v);
-            gui.add(controls, 'rotY', 0, Math.PI * 2).onChange(v => sceneObj.rotation.y = v);
-            gui.add(controls, 'rotZ', 0, Math.PI * 2).onChange(v => sceneObj.rotation.z = v);
-            gui.add(controls, 'scale', 0.1, 3).onChange(v => sceneObj.scale.set(v, v, v));
-            gui.add({ reset: () => {
-              Object.assign(controls, initialValues);
-              sceneObj.position.set(controls.posX, controls.posY, controls.posZ);
-              sceneObj.rotation.set(controls.rotX, controls.rotY, controls.rotZ);
-              sceneObj.scale.set(controls.scale, controls.scale, controls.scale);
-              gui.__controllers.forEach(c => c.updateDisplay());
-            }}, 'reset').name("Reset to Default");
+            document.querySelector('.seg2').addEventListener('pointerdown', () => rotateXminus = true);
+            document.querySelector('.seg2').addEventListener('pointerup',   () => rotateXminus = false);
+            document.querySelector('.seg2').addEventListener('pointerleave',() => rotateXminus = false);
+
+            document.querySelector('.seg3').addEventListener('pointerdown', () => rotateXplus = true);
+            document.querySelector('.seg3').addEventListener('pointerup',   () => rotateXplus = false);
+            document.querySelector('.seg3').addEventListener('pointerleave',() => rotateXplus = false);
+
+            document.querySelector('.seg4').addEventListener('pointerdown', () => rotateYplus = true);
+            document.querySelector('.seg4').addEventListener('pointerup',   () => rotateYplus = false);
+            document.querySelector('.seg4').addEventListener('pointerleave',() => rotateYplus = false);
+
+            // 6だけは「タップ」でリセット
+            document.querySelector('.seg6').addEventListener('pointerdown', () => {
+              // モデル初期値にリセット
+              if(window.sceneObj) {
+                sceneObj.position.set(0, 0, 0);
+                sceneObj.rotation.set(Math.PI/2, 0, 0);
+                sceneObj.scale.set(0.5, 0.5, 0.5);
+              }
+            });
+
+            // 毎フレーム回転
+            function animateRotate() {
+              if(window.sceneObj) {
+                if(rotateYminus) sceneObj.rotation.y -= 0.03;
+                if(rotateYplus)  sceneObj.rotation.y += 0.03;
+                if(rotateXminus) sceneObj.rotation.x -= 0.03;
+                if(rotateXplus)  sceneObj.rotation.x += 0.03;
+              }
+              requestAnimationFrame(animateRotate);
+            }
+            animateRotate();
 
             // ★ GLTFのロード終了時にローディングを消す
             // hideLoadingModal();
@@ -286,6 +312,15 @@
       }
     });
   </script>
-  <img src="./assets/images/Menu1_ClickArea.png" class="menu1-clickarea" alt="Menu" />
+  <div class="menu1-area">
+    <img src="./assets/images/Menu1_ClickArea.png" class="menu1-clickarea" alt="Menu" />
+    <!-- クリック/タッチ用の6つの透明エリア（数字ごとにクラス付与） -->
+    <div class="seg seg1"></div>
+    <div class="seg seg2"></div>
+    <div class="seg seg3"></div>
+    <div class="seg seg4"></div>
+    <div class="seg seg5"></div> <!-- 今回は使わない？ -->
+    <div class="seg seg6"></div>
+  </div>
 </body>
 </html>

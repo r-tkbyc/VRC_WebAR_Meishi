@@ -97,22 +97,22 @@
     .menu1-clickarea {
       position: fixed;
       left: 50%;
-      bottom: 3vh;
+      bottom: 0;
       transform: translateX(-50%);
       width: 80vw;
-      max-width: 600px;
+      /* max-width: 600px; 必要に応じて最大幅調整、不要なら削除OK */
       height: auto;
       z-index: 1200;
       pointer-events: none;
       user-select: none;
-      margin: 0;
+      margin: 0;   /* 余白完全カット */
       padding: 0;
     }
   </style>
 </head>
 
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.4</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.5</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">

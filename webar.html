@@ -126,7 +126,7 @@
 </head>
 
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.7</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.8</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -214,6 +214,7 @@
           (gltf) => {
             const model = gltf;
             const sceneObj = model.scene;
+            window.sceneObj = sceneObj;
 
             // 初期設定
             sceneObj.scale.set(0.5, 0.5, 0.5);
@@ -231,46 +232,56 @@
            }
 
             // モデル操作
-            let rotateYminus = false, rotateYplus = false, rotateXminus = false, rotateXplus = false;
-
-            // 押しっぱなしで回転フラグ
-            document.querySelector('.seg1').addEventListener('pointerdown', () => rotateYminus = true);
-            document.querySelector('.seg1').addEventListener('pointerup',   () => rotateYminus = false);
-            document.querySelector('.seg1').addEventListener('pointerleave',() => rotateYminus = false);
-
-            document.querySelector('.seg2').addEventListener('pointerdown', () => rotateXminus = true);
-            document.querySelector('.seg2').addEventListener('pointerup',   () => rotateXminus = false);
-            document.querySelector('.seg2').addEventListener('pointerleave',() => rotateXminus = false);
-
-            document.querySelector('.seg3').addEventListener('pointerdown', () => rotateXplus = true);
-            document.querySelector('.seg3').addEventListener('pointerup',   () => rotateXplus = false);
-            document.querySelector('.seg3').addEventListener('pointerleave',() => rotateXplus = false);
-
-            document.querySelector('.seg4').addEventListener('pointerdown', () => rotateYplus = true);
-            document.querySelector('.seg4').addEventListener('pointerup',   () => rotateYplus = false);
-            document.querySelector('.seg4').addEventListener('pointerleave',() => rotateYplus = false);
-
-            // 6だけは「タップ」でリセット
-            document.querySelector('.seg6').addEventListener('pointerdown', () => {
-              // モデル初期値にリセット
-              if(window.sceneObj) {
-                sceneObj.position.set(0, 0, 0);
-                sceneObj.rotation.set(Math.PI/2, 0, 0);
-                sceneObj.scale.set(0.5, 0.5, 0.5);
-              }
-            });
-
             // 毎フレーム回転
             function animateRotate() {
-              if(window.sceneObj) {
-                if(rotateYminus) sceneObj.rotation.y -= 0.03;
-                if(rotateYplus)  sceneObj.rotation.y += 0.03;
-                if(rotateXminus) sceneObj.rotation.x -= 0.03;
-                if(rotateXplus)  sceneObj.rotation.x += 0.03;
-              }
-              requestAnimationFrame(animateRotate);
-            }
-            animateRotate();
+              let dragging = false;
+              let lastX = 0, lastY = 0;
+
+              // タッチ開始
+              window.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 1) {
+                  dragging = true;
+                  lastX = e.touches[0].clientX;
+                  lastY = e.touches[0].clientY;
+                }
+              });
+
+              // タッチ移動
+              window.addEventListener('touchmove', function(e) {
+                if (!dragging || !window.sceneObj) return;
+                let deltaX = e.touches[0].clientX - lastX;
+                let deltaY = e.touches[0].clientY - lastY;
+                // 横移動でY軸回転、縦移動でX軸回転
+                window.sceneObj.rotation.y += deltaX * 0.01;
+                window.sceneObj.rotation.x += deltaY * 0.01;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+                e.preventDefault(); // ページスクロールなど防止
+              }, { passive: false });
+
+              // タッチ終了
+              window.addEventListener('touchend', function(e) {
+                dragging = false;
+              });
+
+              // PC用マウス操作（任意）
+              window.addEventListener('mousedown', function(e) {
+                dragging = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+              });
+              window.addEventListener('mousemove', function(e) {
+                if (!dragging || !window.sceneObj) return;
+                let deltaX = e.clientX - lastX;
+                let deltaY = e.clientY - lastY;
+                window.sceneObj.rotation.y += deltaX * 0.01;
+                window.sceneObj.rotation.x += deltaY * 0.01;
+                lastX = e.clientX;
+                lastY = e.clientY;
+              });
+              window.addEventListener('mouseup', function(e) {
+                dragging = false;
+              });
 
             // ★ GLTFのロード終了時にローディングを消す
             // hideLoadingModal();

@@ -119,7 +119,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.0</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.1</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -272,8 +272,8 @@
           loadAvatarModel('./assets/models/AvatarModel1.glb');
         });
         document.querySelector('.seg3').addEventListener('pointerdown', () => {
-          window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
-          // location.href = 'https://x.com/r_tkbyc'; // ←同じタブで遷移したい場合はこちら
+          // window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
+          location.href = 'https://x.com/r_tkbyc'; // ←同じタブで遷移したい場合はこちら
         });
   
         // ドラッグで回転

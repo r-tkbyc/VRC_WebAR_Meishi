@@ -75,12 +75,11 @@
     .loading-text {
       animation: text-blink 1s infinite;
     }
-
     /* 文字点灯アニメーション */
     @keyframes text-blink {
-      0%   { opacity: 1; }
-      50%  { opacity: 0.25; }
-      100% { opacity: 1; }
+      0%   { opacity: 1; filter: brightness(1); }
+      50%  { opacity: 0.4; filter: brightness(2); }
+      100% { opacity: 1; filter: brightness(1); }
     }
     /* --- スキャンUI --- */
     .scanning-ui {
@@ -147,7 +146,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.6.1</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.6.2</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">

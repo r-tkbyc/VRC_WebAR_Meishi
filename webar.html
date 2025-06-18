@@ -119,7 +119,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.3</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.4</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -340,8 +340,8 @@
             scene.add(currentModel);
 
             // 必要ならワールド座標に合わせる
-            // currentModel.position.copy(anchor.group.getWorldPosition(new THREE.Vector3()));
-            // currentModel.quaternion.copy(anchor.group.getWorldQuaternion(new THREE.Quaternion()));
+            currentModel.position.copy(anchor.group.getWorldPosition(new THREE.Vector3()));
+            currentModel.quaternion.copy(anchor.group.getWorldQuaternion(new THREE.Quaternion()));
 
             modelReleased = true;
           }

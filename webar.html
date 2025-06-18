@@ -136,7 +136,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.5.1</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.5.2</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -180,6 +180,7 @@
     // --- ローディングモーダル進捗制御 ---
     const video = document.getElementById('loadingVideo');
     const modal = document.getElementById('loadingModal');
+    const switchLoading = document.getElementById('switch-loading'); // 追加（モデル切替用ローディング）
   
     // 進捗同期関数（0〜1）
     function setLoadingProgress(progress) {
@@ -253,16 +254,20 @@
         window.sceneObj = null; // 最新モデルを常にグローバルへ
   
         // モデル切り替え
+        let isFirstModelLoad = true;
+
         function loadAvatarModel(glbPath, showSwitchLoading = true) {
           if (showSwitchLoading) {
-            document.getElementById('switch-loading').style.display = 'flex'; // アナウンス表示
+            switchLoading.style.display = 'flex'; // ← モデル切替用ローディング
           }
           loader.load(
             glbPath,
             (gltf) => {
+              // 既存を削除
               if (currentModel && anchor.group.children.includes(currentModel)) {
                 anchor.group.remove(currentModel);
               }
+              // 新モデル
               const model = gltf.scene;
               model.scale.set(0.5, 0.5, 0.5);
               model.rotation.set(Math.PI / 2, 0, 0);
@@ -270,26 +275,31 @@
               anchor.group.add(model);
               currentModel = model;
               window.sceneObj = model;
-              // モデル切り替えローディングを消す
-              document.getElementById('switch-loading').style.display = 'none';
-              // 初回のみローディング動画再生（この部分は最初のloadのみ通す）
-              onModelLoaded();
+
+              // モデル切り替え用ローディング非表示
+              switchLoading.style.display = 'none';
+
+              // 初回のみローディングモーダル動画を再生
+              if (isFirstModelLoad) {
+                onModelLoaded();
+                isFirstModelLoad = false;
+              }
             },
             (xhr) => {
               let progress = xhr.loaded / xhr.total;
               setLoadingProgress(progress);
             },
             (error) => {
-              document.getElementById('switch-loading').style.display = 'none';
               console.error('3Dモデルの読み込み中にエラー:', error);
+              switchLoading.style.display = 'none';
             }
           );
         }
 
-        // 初期表示は「モデル切り替えアナウンス」を出さずに呼び出す
+        // ==== 初回のみ、動画付きローディングだけ表示 ====
         loadAvatarModel('./assets/models/AvatarModel0.glb', false);
 
-        // seg1/seg2タップは「モデル切り替えアナウンス」を表示して切り替え
+        // ==== モデル切り替え時はテキストローディングのみ ====
         document.querySelector('.seg1').addEventListener('pointerdown', () => {
           loadAvatarModel('./assets/models/AvatarModel0.glb', true);
         });

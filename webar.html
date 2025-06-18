@@ -71,6 +71,13 @@
       pointer-events: none;
       text-align: center;
       letter-spacing: 0.08em;
+      animation: loading-blink 1s infinite;
+    }
+    /* 文字点灯アニメーション */
+    @keyframes loading-blink {
+      0%   { opacity: 1; }
+      50%  { opacity: 0.25; }
+      100% { opacity: 1; }
     }
     /* --- スキャンUI --- */
     .scanning-ui {
@@ -137,11 +144,11 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.6</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.6.0</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
-    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.0.9</p>
+    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.0</p>
     <div class="loading-bg"></div>
     <video
       id="loadingVideo"

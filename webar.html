@@ -146,7 +146,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.5.8</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.5.9</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -286,7 +286,7 @@
               window.sceneObj = model;
 
               // ローディング案内を消す
-              document.getElementById('switch-loading').style.display = 'none';
+              document.getElementById('switch-loading').classList.remove('active');
 
               // 初回ロード時の処理
               onModelLoaded();

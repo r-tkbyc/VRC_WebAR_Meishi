@@ -20,7 +20,6 @@
       height: 100%;
       position: relative;
     }
-
     /* --- ローディングモーダル --- */
     .loading-modal {
       position: fixed;
@@ -53,6 +52,24 @@
       background: transparent;
       display: block;
       pointer-events: none;
+    }
+    /* --- モデル切り替えローディング --- */
+    .model-loading-notice {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3000;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 24px 32px;
+      border-radius: 14px;
+      font-size: 1.3em;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      pointer-events: none;
+      text-align: center;
+      letter-spacing: 0.08em;
     }
     /* --- スキャンUI --- */
     .scanning-ui {
@@ -119,7 +136,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.6</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.7</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -137,6 +154,11 @@
       poster=""
       autoplay
     ></video>
+  </div>
+
+  <!-- モデル切り替えローディング -->
+  <div id="modelLoadingNotice" class="model-loading-notice">
+    モデルを読み込んでいます…
   </div>
 
   <div class="action-menu-area">
@@ -232,14 +254,20 @@
   
         // モデル切り替え
         function loadAvatarModel(glbPath) {
+          // 既存モデルを即時で消す
+          if (currentModel && anchor.group.children.includes(currentModel)) {
+            anchor.group.remove(currentModel);
+            currentModel = null;
+            window.sceneObj = null;
+          }
+
+          // ローディング案内を表示
+          document.getElementById('modelLoadingNotice').style.display = 'block';
+
+          // 新モデルのロード
           loader.load(
             glbPath,
             (gltf) => {
-              // 既存を削除
-              if (currentModel && anchor.group.children.includes(currentModel)) {
-                anchor.group.remove(currentModel);
-              }
-              // 新モデル
               const model = gltf.scene;
               model.scale.set(0.5, 0.5, 0.5);
               model.rotation.set(Math.PI / 2, 0, 0);
@@ -247,8 +275,11 @@
               anchor.group.add(model);
               currentModel = model;
               window.sceneObj = model;
-  
-              // 初回のみローディング動画再生
+
+              // ローディング案内を非表示
+              document.getElementById('modelLoadingNotice').style.display = 'none';
+
+              // ローディング動画（初回のみ）は現状通り
               onModelLoaded();
             },
             (xhr) => {
@@ -256,6 +287,7 @@
               setLoadingProgress(progress);
             },
             (error) => {
+              document.getElementById('modelLoadingNotice').textContent = "読み込みエラー";
               console.error('3Dモデルの読み込み中にエラー:', error);
             }
           );
@@ -272,8 +304,8 @@
           loadAvatarModel('./assets/models/AvatarModel1.glb');
         });
         document.querySelector('.seg3').addEventListener('pointerdown', () => {
-          // window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
-          location.href = 'https://x.com/r_tkbyc'; // 同じタブで遷移したい場合はこちら
+          window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
+          // location.href = 'https://x.com/r_tkbyc'; // 同じタブで遷移したい場合はこちら
         });
   
         // ドラッグで回転

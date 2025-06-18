@@ -119,7 +119,7 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.4</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.4.5</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -329,22 +329,37 @@
         });
   
         // スキャンUIの出し入れ
-        let modelReleased = false; // 一度だけ実行フラグ
+        let modelInScene = false;
 
+        // anchor検出時
         anchor.onTargetFound = () => {
           scanningUI.style.display = 'none';
-
-          if (!modelReleased && currentModel) {
-            // モデルをアンカーから外してscene直下に
-            anchor.group.remove(currentModel);
-            scene.add(currentModel);
-
-            // 必要ならワールド座標に合わせる
-            currentModel.position.copy(anchor.group.getWorldPosition(new THREE.Vector3()));
-            currentModel.quaternion.copy(anchor.group.getWorldQuaternion(new THREE.Quaternion()));
-
-            modelReleased = true;
+          // 既にsceneにいる場合はanchor.groupに戻す
+          if (modelInScene) {
+            anchor.group.add(currentModel);
+            // ローカル座標リセット
+            currentModel.position.set(0,0,0);
+            currentModel.rotation.set(Math.PI/2, 0, 0);
+            modelInScene = false;
           }
+        };
+
+        // anchor消失時
+        anchor.onTargetLost = () => {
+          scanningUI.style.display = 'block';
+
+          // ワールド座標に変換
+          currentModel.updateMatrixWorld();
+          let worldPos = new THREE.Vector3();
+          let worldQuat = new THREE.Quaternion();
+          currentModel.getWorldPosition(worldPos);
+          currentModel.getWorldQuaternion(worldQuat);
+
+          // scene直下へ
+          scene.add(currentModel);
+          currentModel.position.copy(worldPos);
+          currentModel.quaternion.copy(worldQuat);
+          modelInScene = true;
         };
   
         await mindarThree.start();

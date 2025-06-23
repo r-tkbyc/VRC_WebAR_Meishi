@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.133.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.133.1/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    #container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* --- ローディングモーダル --- */
+    .loading-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(20,30,34,0.92);
+      transition: opacity 0.7s;
+    }
+    .loading-modal.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loading-bg {
+      position: absolute;
+      inset: 0;
+      background: #222 url('./assets/images/LoadingBG.png') center center no-repeat;
+      background-size: auto 100vh;
+      z-index: 1;
+      opacity: 1;
+    }
+    .loading-modal video {
+      z-index: 2;
+      width: 80vw;
+      max-width: 650px;
+      height: auto;
+      max-height: 260px;
+      background: transparent;
+      display: block;
+      pointer-events: none;
+    }
+    /* --- スキャンUI --- */
+    .scanning-ui {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 75vw; /* 画面幅の75% */
+      aspect-ratio: 774 / 468; /* 画像に応じて調整（例：774 / 468） */
+      z-index: 999;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    /* オーバーレイ画像 */
+    .scan-overlay {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+    /* スキャンライン */
+    .scan-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 2;
+      animation: scanning 2s linear infinite;
+    }
+    /* アニメーション（ガイド枠内だけを上下） */
+    @keyframes scanning {
+      0% { top: 0px; }
+      50% { top: 100%; }
+      100% { top: 0px; }
+    }
+  </style>
+</head>
+<body>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.3.2</p>
+
+  <!-- ローディングモーダル -->
+  <div class="loading-modal" id="loadingModal">
+    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.1.2</p>
+    <div class="loading-bg"></div>
+    <video
+      id="loadingVideo"
+      src="./assets/videos/LoadingAni.mp4"
+      width="650"
+      height="260"
+      preload="auto"
+      playsinline
+      muted
+      tabindex="-1"
+      poster=""
+      autoplay
+    ></video>
+  </div>
+
+  <div id="container"></div>
+
+  <!-- スキャンUI -->
+  <div class="scanning-ui" id="scanning">
+    <img src="./assets/guide/scan-overlay.png" class="scan-overlay" />
+    <div class="scan-line"></div>
+  </div>
+
+  <script>
+    // --- ローディングモーダル進捗制御 ---
+    const video = document.getElementById('loadingVideo');
+    const modal = document.getElementById('loadingModal');
+    const loadingText = document.getElementById('loadingText');
+
+    // 進捗同期関数（0〜1）
+    function setLoadingProgress(progress) {
+      if (video.readyState >= 1 && video.duration) {
+        video.currentTime = progress * video.duration;
+      }
+    }
+
+    // フェードアウト
+    function hideLoadingModal() {
+      modal.classList.add('fade-out');
+      setTimeout(() => modal.style.display = 'none', 800);
+    }
+
+    // 動画初期化
+    video.addEventListener('loadedmetadata', ()=>{
+      video.currentTime = 0;
+      video.pause();
+      setLoadingProgress(0);
+    });
+
+    // -------------------------------
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+          container: document.querySelector("#container"),
+          imageTargetSrc: "./assets/target/targets.mind",
+          uiScanning: true, // スキャンUIを有効化
+          uiLoading: true, // ローディングUIを有効化
+        });
+
+        const {renderer, scene, camera} = mindarThree;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+
+        const light = new THREE.AmbientLight(0xffffff, 1.0);
+        scene.add(light);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        directionalLight.position.set(0, 1, 1);
+        scene.add(directionalLight);
+
+        const anchor = mindarThree.addAnchor(0);
+
+        // ローディング画面とスキャンUIの要素
+        const scanningUI = document.getElementById('scanning');
+
+        // GLTFローダーの作成と3Dモデルの読み込み
+        const loader = new THREE.GLTFLoader();
+
+        loader.load(
+          "./assets/model/KuromojiBase.glb",
+          (gltf) => {
+            const model = gltf;
+            const sceneObj = model.scene;
+
+            // 初期設定
+            sceneObj.scale.set(0.5, 0.5, 0.5);
+            sceneObj.rotation.set(Math.PI / 2, 0, 0);
+            sceneObj.position.set(0, 0, 0);
+
+            // モデルをアンカーに追加
+            anchor.group.add(sceneObj);
+
+            // ローディング完了時、動画を先頭から1回再生
+            if (video.readyState >= 1) {
+              video.currentTime = 0;
+              video.muted = true; // モバイル自動再生用（念のため）
+              video.play();
+           }
+
+            // dat.GUIの設定
+            const initialValues = {
+              posX: 0,
+              posY: 0,
+              posZ: 0,
+              rotX: Math.PI / 2,
+              rotY: 0,
+              rotZ: 0,
+              scale: 0.5
+            };
+            const controls = { ...initialValues };
+
+            const gui = new dat.GUI();
+            gui.close(); // 初期状態は折りたたみ
+
+            gui.add(controls, 'posX', -2, 2).onChange(v => sceneObj.position.x = v);
+            gui.add(controls, 'posY', -2, 2).onChange(v => sceneObj.position.y = v);
+            gui.add(controls, 'posZ', -2, 2).onChange(v => sceneObj.position.z = v);
+            gui.add(controls, 'rotX', 0, Math.PI * 2).onChange(v => sceneObj.rotation.x = v);
+            gui.add(controls, 'rotY', 0, Math.PI * 2).onChange(v => sceneObj.rotation.y = v);
+            gui.add(controls, 'rotZ', 0, Math.PI * 2).onChange(v => sceneObj.rotation.z = v);
+            gui.add(controls, 'scale', 0.1, 3).onChange(v => sceneObj.scale.set(v, v, v));
+            gui.add({ reset: () => {
+              Object.assign(controls, initialValues);
+              sceneObj.position.set(controls.posX, controls.posY, controls.posZ);
+              sceneObj.rotation.set(controls.rotX, controls.rotY, controls.rotZ);
+              sceneObj.scale.set(controls.scale, controls.scale, controls.scale);
+              gui.__controllers.forEach(c => c.updateDisplay());
+            }}, 'reset').name("Reset to Default");
+
+            // ★ GLTFのロード終了時にローディングを消す
+            // hideLoadingModal();
+            setTimeout(hideLoadingModal, 5000); //デバッグ用 5秒表示させる
+          },
+          (xhr) => {
+            // ローディング進捗に応じて動画同期
+            let progress = xhr.loaded / xhr.total;
+            setLoadingProgress(progress);
+          },
+          (error) => {
+            console.error('3Dモデルの読み込み中にエラーが発生しました:', error);
+          }
+        );
+
+        // ターゲット検出時のイベント
+        anchor.onTargetFound = () => {
+          scanningUI.style.display = 'none';
+        };
+        anchor.onTargetLost = () => {
+          scanningUI.style.display = 'block';
+        };
+
+        await mindarThree.start();
+        scanningUI.style.display = 'block'; // AR開始時にスキャンUIを表示
+
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+
+        window.addEventListener('beforeunload', () => {
+          mindarThree.stop();
+        });
+
+      } catch (error) {
+        console.error('WebARの初期化中にエラーが発生しました:', error);
+        // 万一エラー時はローディングモーダルも非表示に
+        hideLoadingModal();
+      }
+    });
+  </script>
+</body>
+</html>

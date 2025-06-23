@@ -290,7 +290,7 @@
               currentModel = model;
               window.sceneObj = model;
 
-              // ★アニメーション再生処理（ここが追記部分）
+              // アニメーション再生処理
               if (gltf.animations && gltf.animations.length > 0) {
                 mixer = new THREE.AnimationMixer(model);
                 gltf.animations.forEach((clip) => {
@@ -299,7 +299,6 @@
               } else {
                 mixer = null;
               }
-              // ★ここまで
 
               // ローディング案内を消す
               document.getElementById('modelLoadingNotice').style.display = 'none';
@@ -396,7 +395,7 @@
         await mindarThree.start();
         scanningUI.style.display = 'block';
 
-        // ★ここだけ変更：アニメーション用mixerの更新も追加
+        // アニメーション用mixerの更新も追加
         renderer.setAnimationLoop(() => {
           if (mixer) mixer.update(clock.getDelta());
           renderer.render(scene, camera);

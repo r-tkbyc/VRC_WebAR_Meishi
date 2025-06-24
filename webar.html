@@ -153,46 +153,67 @@
       justify-content: center;
       align-items: center;
     }
-
     .sns-modal.active {
       display: flex;
     }
-
-    .sns-modal-content {
-      background: #222;
-      color: #fff;
-      border-radius: 8px;
-      padding: 32px 24px;
+    .sns-modal-card {
+      background: #042b35;
+      border-radius: 16px;
+      box-shadow: 0 0 16px #1d6364dc, 0 0 16px 1px #1d6364bb;
+      border: 2px solid #1d6364bb;
+      padding: 40px 38px 34px 38px;
+      width: 86vw;
+      max-width: 360px;
+      min-width: 180px;
       text-align: center;
-      min-width: 220px;
+      box-sizing: border-box;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-
+    .sns-modal-card::before {
+      content: "";
+      position: absolute;
+      top: 4px; left: 4px; right: 4px; bottom: 4px;
+      border-radius: 12px;
+      border: 2px solid #277a73;
+      pointer-events: none;
+      box-shadow: 0 0 8px #277a73aa;
+      z-index: 3;
+    }
     .sns-modal-buttons {
-      margin-top: 18px;
+      margin-top: 20px;
+      display: flex;
+      gap: 28px;
+      width: 100%;
+      justify-content: center;
     }
-
-    .sns-modal-buttons button {
-      margin: 0 16px;
-      padding: 8px 24px;
+    .sns-btn {
+      width: 96px;
+      height: 44px;
       background: #073d40;
-      border: 5px solid #0e9b92;
-      border-radius: 20px;
+      border: 3px solid #0e9b92;
+      border-radius: 13px;
       color: #ffffff;
-      font-size: 1.25em;
+      font-size: 1.08em;
       font-weight: bold;
       letter-spacing: 0.04em;
       text-align: center;
       cursor: pointer;
-      box-shadow: 0 0 12px #27c7bc44;
-      transition: background 0.16s, color 0.16s, box-shadow 0.16s;
+      box-shadow: 0 0 8px #27c7bc44;
+      transition: background 0.13s, color 0.13s, box-shadow 0.13s;
       outline: none;
-      display: block;
-      backdrop-filter: blur(2px);
+      margin: 0 4px;
+      backdrop-filter: blur(1px);
+    }
+    .sns-btn:active,
+    .sns-btn:hover {
+      background: rgba(30,108,110,0.85);
+      color: #fff;
+      box-shadow: 0 0 12px #27c7bc88;
     }
 
-    .sns-modal-buttons button:last-child {
-      background: #555;
-    }
   </style>
 </head>
 <body>
@@ -236,17 +257,16 @@
     <div class="scan-line"></div>
   </div>
 
-  <!-- SNS遷移前モーダル -->
+  <!-- SNS遷移確認モーダル -->
   <div id="snsModal" class="sns-modal">
-    <div class="sns-modal-content">
-      <p>Xに移動しますか？</p>
+    <div class="sns-modal-card">
+      <p style="font-size:1.1em;margin-bottom:22px;">Xに移動しますか？</p>
       <div class="sns-modal-buttons">
-        <button id="snsYes">はい</button>
-        <button id="snsNo">いいえ</button>
+        <button id="snsYes" class="sns-btn">はい</button>
+        <button id="snsNo" class="sns-btn">いいえ</button>
       </div>
     </div>
   </div>
-  
 
   <script>
     // --- ローディングモーダル進捗制御 ---
@@ -394,7 +414,7 @@
         });
         // 「はい」ボタン
         document.getElementById('snsYes').addEventListener('click', () => {
-          window.open('https://x.com/r_tkbyc', '_blank');　// 新しいタブで開く
+          window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
           // location.href = 'https://x.com/r_tkbyc'; // 同じタブで遷移したい場合はこちら
           document.getElementById('snsModal').classList.remove('active');
         });

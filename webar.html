@@ -143,10 +143,52 @@
     .seg1 { left: 10%;  top: 45.5%; width: 22%; height: 48.5%; }
     .seg2 { left: 39%; top: 15.5%; width: 22%; height: 48.5%; }
     .seg3 { left: 68%; top: 45.5%; width: 22%; height: 48.5%; }
+
+    .sns-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .sns-modal.active {
+      display: flex;
+    }
+
+    .sns-modal-content {
+      background: #222;
+      color: #fff;
+      border-radius: 8px;
+      padding: 32px 24px;
+      text-align: center;
+      min-width: 220px;
+    }
+
+    .sns-modal-buttons {
+      margin-top: 18px;
+    }
+
+    .sns-modal-buttons button {
+      margin: 0 16px;
+      padding: 8px 24px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      background: #26aaff;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .sns-modal-buttons button:last-child {
+      background: #555;
+    }
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.7.2</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.7.3</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -185,6 +227,18 @@
     <img src="./assets/guide/scan-overlay.png" class="scan-overlay" />
     <div class="scan-line"></div>
   </div>
+
+  <!-- SNS遷移前モーダル -->
+  <div id="snsModal" class="sns-modal">
+    <div class="sns-modal-content">
+      <p>Xに移動しますか？</p>
+      <div class="sns-modal-buttons">
+        <button id="snsYes">はい</button>
+        <button id="snsNo">いいえ</button>
+      </div>
+    </div>
+  </div>
+  
 
   <script>
     // --- ローディングモーダル進捗制御 ---
@@ -326,9 +380,19 @@
         document.querySelector('.seg2').addEventListener('pointerdown', () => {
           loadAvatarModel('./assets/models/AvatarModel1.glb');
         });
+        // seg3タップ時の動作変更
         document.querySelector('.seg3').addEventListener('pointerdown', () => {
-          window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
+          document.getElementById('snsModal').classList.add('active');
+        });
+        // 「はい」ボタン
+        document.getElementById('snsYes').addEventListener('click', () => {
+          window.open('https://x.com/r_tkbyc', '_blank');　// 新しいタブで開く
           // location.href = 'https://x.com/r_tkbyc'; // 同じタブで遷移したい場合はこちら
+          document.getElementById('snsModal').classList.remove('active');
+        });
+        // 「いいえ」ボタン
+        document.getElementById('snsNo').addEventListener('click', () => {
+          document.getElementById('snsModal').classList.remove('active');
         });
 
         // ドラッグで回転

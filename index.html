@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -37,7 +37,6 @@
       flex-direction: column;
       align-items: center;
     }
-    /* 内側ダブル線 */
     .card::before {
       content: "";
       position: absolute;
@@ -60,11 +59,11 @@
     .card ul {
       font-size: 1.12em;
       line-height: 1.6;
-      list-style: disc outside;   /* outsideで行頭にマーク、インデント */
-      padding-left: 1.5em;        /* インデント（好みで調整） */
+      list-style: disc outside;
+      padding-left: 1.5em;
       margin: 0 0 18px 0;
       text-align: left;
-      align-self: flex-start;   /* ulだけ左寄せ */
+      align-self: flex-start;
     }
     .card button {
       width: 80vw;
@@ -96,17 +95,15 @@
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.0.7</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.1.1.0</p>
   <div class="card">
     <h2>WebARご利用案内</h2>
-    <p>
-      このWebAR体験では、<br>
-      <b>カメラ</b>や<b>位置情報</b>など、アクセス許可が必要です。
-    </p>
+    <p>このWebAR体験では、<br><strong>カメラ</strong>や<strong>位置情報</strong>など、アクセス許可が必要です。</p>
     <ul>
       <li>カメラを許可しないとAR体験はご利用いただけません</li>
-      <li>周囲の安全に十分ご注意ください</li>
-      <li>スマートフォンを<strong>縦向き</strong>でご利用ください</li>
+<li>周囲の安全に十分ご注意ください</li>
+<li>スマートフォンを<strong>縦向き</strong>でご利用ください</li>
+
     </ul>
     <button onclick="location.href='webar.html'">OK・利用を開始する</button>
   </div>

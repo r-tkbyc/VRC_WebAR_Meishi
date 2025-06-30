@@ -143,91 +143,10 @@
     .seg1 { left: 10%;  top: 45.5%; width: 22%; height: 48.5%; }
     .seg2 { left: 39%; top: 15.5%; width: 22%; height: 48.5%; }
     .seg3 { left: 68%; top: 45.5%; width: 22%; height: 48.5%; }
-
-    .sns-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 5000;
-      background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-    }
-    .sns-modal.active {
-      display: flex;
-    }
-    .sns-modal-card {
-      background: #042b35;
-      border-radius: 16px;
-      box-shadow: 0 0 10px #1d6364dc, 0 0 10px 1px #1d6364bb;
-      border: 2px solid #1d6364bb;
-      padding: 40px 38px 34px 38px;
-      width: 86vw;
-      max-width: 360px;
-      min-width: 180px;
-      text-align: center;
-      box-sizing: border-box;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
-    }
-    .sns-modal-card::before {
-      content: "";
-      position: absolute;
-      top: 4px; left: 4px; right: 4px; bottom: 4px;
-      border-radius: 12px;
-      border: 2px solid #277a73;
-      pointer-events: none;
-      box-shadow: 0 0 8px #277a73aa;
-      z-index: 3;
-    }
-    .sns-modal-message {
-      color: #fff;
-      font-size: 1.15em;
-      font-family: inherit;
-      margin-bottom: 22px;
-      letter-spacing: 0.05em;
-      font-weight: bold;
-    }
-    .sns-modal-buttons {
-      margin-top: 20px;
-      display: flex;
-      gap: 28px;
-      width: 100%;
-      justify-content: center;
-    }
-    .sns-btn {
-      width: 96px;
-      height: 44px;
-      background: #073d40;
-      border: 3px solid #0e9b92;
-      border-radius: 13px;
-      color: #ffffff;
-      font-size: 1.08em;
-      font-weight: bold;
-      letter-spacing: 0.04em;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 0 8px #27c7bc44;
-      transition: background 0.13s, color 0.13s, box-shadow 0.13s;
-      outline: none;
-      margin: 0 4px;
-      font-family: inherit;
-      backdrop-filter: blur(1px);
-    }
-    .sns-btn:active,
-    .sns-btn:hover {
-      background: rgba(30,108,110,0.85);
-      color: #fff;
-      box-shadow: 0 0 12px #27c7bc88;
-    }
-
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.7.8</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.7.2</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -249,7 +168,7 @@
 
   <!-- モデル読み込み時のローディング -->
   <div id="modelLoadingNotice" class="model-loading-notice">
-    <span class="loading-text">Loading…</span>
+    <span class="loading-text">読み込み中…</span>
   </div>
 
   <div class="action-menu-area">
@@ -265,17 +184,6 @@
   <div class="scanning-ui" id="scanning">
     <img src="./assets/guide/scan-overlay.png" class="scan-overlay" />
     <div class="scan-line"></div>
-  </div>
-
-  <!-- SNS遷移確認モーダル -->
-  <div id="snsModal" class="sns-modal">
-    <div class="sns-modal-card">
-      <p class="sns-modal-message">Xに移動しますか？</p>
-      <div class="sns-modal-buttons">
-        <button id="snsYes" class="sns-btn">はい</button>
-        <button id="snsNo" class="sns-btn">いいえ</button>
-      </div>
-    </div>
   </div>
 
   <script>
@@ -402,7 +310,7 @@
               setLoadingProgress(progress);
             },
             (error) => {
-              document.getElementById('modelLoadingNotice').textContent = "Failed to load model...";
+              document.getElementById('modelLoadingNotice').textContent = "モデルの読み込みに失敗しました";
               console.error('3Dモデルの読み込み中にエラー:', error);
             }
           );
@@ -418,19 +326,9 @@
         document.querySelector('.seg2').addEventListener('pointerdown', () => {
           loadAvatarModel('./assets/models/AvatarModel1.glb');
         });
-        // seg3タップ時の動作変更
         document.querySelector('.seg3').addEventListener('pointerdown', () => {
-          document.getElementById('snsModal').classList.add('active');
-        });
-        // 「はい」ボタン
-        document.getElementById('snsYes').addEventListener('click', () => {
           window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
           // location.href = 'https://x.com/r_tkbyc'; // 同じタブで遷移したい場合はこちら
-          document.getElementById('snsModal').classList.remove('active');
-        });
-        // 「いいえ」ボタン
-        document.getElementById('snsNo').addEventListener('click', () => {
-          document.getElementById('snsModal').classList.remove('active');
         });
 
         // ドラッグで回転

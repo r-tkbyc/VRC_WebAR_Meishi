@@ -143,95 +143,14 @@
     .seg1 { left: 10%;  top: 45.5%; width: 22%; height: 48.5%; }
     .seg2 { left: 39%; top: 15.5%; width: 22%; height: 48.5%; }
     .seg3 { left: 68%; top: 45.5%; width: 22%; height: 48.5%; }
-
-    .sns-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 5000;
-      background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-    }
-    .sns-modal.active {
-      display: flex;
-    }
-    .sns-modal-card {
-      background: #042b35;
-      border-radius: 16px;
-      box-shadow: 0 0 10px #1d6364dc, 0 0 10px 1px #1d6364bb;
-      border: 2px solid #1d6364bb;
-      padding: 40px 38px 34px 38px;
-      width: 86vw;
-      max-width: 360px;
-      min-width: 180px;
-      text-align: center;
-      box-sizing: border-box;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
-    }
-    .sns-modal-card::before {
-      content: "";
-      position: absolute;
-      top: 4px; left: 4px; right: 4px; bottom: 4px;
-      border-radius: 12px;
-      border: 2px solid #277a73;
-      pointer-events: none;
-      box-shadow: 0 0 8px #277a73aa;
-      z-index: 3;
-    }
-    .sns-modal-message {
-      color: #fff;
-      font-size: 1.15em;
-      font-family: inherit;
-      margin-bottom: 22px;
-      letter-spacing: 0.05em;
-      font-weight: bold;
-    }
-    .sns-modal-buttons {
-      margin-top: 20px;
-      display: flex;
-      gap: 28px;
-      width: 100%;
-      justify-content: center;
-    }
-    .sns-btn {
-      width: 96px;
-      height: 44px;
-      background: #073d40;
-      border: 3px solid #0e9b92;
-      border-radius: 13px;
-      color: #ffffff;
-      font-size: 1.08em;
-      font-weight: bold;
-      letter-spacing: 0.04em;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 0 8px #27c7bc44;
-      transition: background 0.13s, color 0.13s, box-shadow 0.13s;
-      outline: none;
-      margin: 0 4px;
-      font-family: inherit;
-      backdrop-filter: blur(1px);
-    }
-    .sns-btn:active,
-    .sns-btn:hover {
-      background: rgba(30,108,110,0.85);
-      color: #fff;
-      box-shadow: 0 0 12px #27c7bc88;
-    }
-
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.7.8</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.6.5</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
-    <!-- p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.0</p -->
+    <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.1.0</p>
     <div class="loading-bg"></div>
     <video
       id="loadingVideo"
@@ -249,7 +168,7 @@
 
   <!-- モデル読み込み時のローディング -->
   <div id="modelLoadingNotice" class="model-loading-notice">
-    <span class="loading-text">Loading…</span>
+    <span class="loading-text">読み込み中…</span>
   </div>
 
   <div class="action-menu-area">
@@ -267,35 +186,24 @@
     <div class="scan-line"></div>
   </div>
 
-  <!-- SNS遷移確認モーダル -->
-  <div id="snsModal" class="sns-modal">
-    <div class="sns-modal-card">
-      <p class="sns-modal-message">Xに移動しますか？</p>
-      <div class="sns-modal-buttons">
-        <button id="snsYes" class="sns-btn">はい</button>
-        <button id="snsNo" class="sns-btn">いいえ</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     // --- ローディングモーダル進捗制御 ---
     const video = document.getElementById('loadingVideo');
     const modal = document.getElementById('loadingModal');
-
+  
     // 進捗同期関数（0〜1）
     function setLoadingProgress(progress) {
       if (video.readyState >= 1 && video.duration) {
         video.currentTime = progress * video.duration;
       }
     }
-
+  
     // フェードアウト
     function hideLoadingModal() {
       modal.classList.add('fade-out');
       setTimeout(() => modal.style.display = 'none', 800);
     }
-
+  
     // 動画初期化
     video.addEventListener('loadedmetadata', () => {
       video.currentTime = 0;
@@ -325,7 +233,7 @@
         });
       }
     }
-
+  
     document.addEventListener("DOMContentLoaded", async () => {
       try {
         const mindarThree = new window.MINDAR.IMAGE.MindARThree({
@@ -334,30 +242,26 @@
           uiScanning: true,
           uiLoading: true,
         });
-
+  
         const {renderer, scene, camera} = mindarThree;
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.outputEncoding = THREE.sRGBEncoding;
-
+  
         const light = new THREE.AmbientLight(0xffffff, 1.0);
         scene.add(light);
-
+  
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
         directionalLight.position.set(0, 1, 1);
         scene.add(directionalLight);
-
+  
         const anchor = mindarThree.addAnchor(0);
         const scanningUI = document.getElementById('scanning');
         const loader = new THREE.GLTFLoader();
-
-        // アニメーション再生用mixer・clock
-        let mixer = null;
-        const clock = new THREE.Clock();
-
+  
         // 現在表示しているモデル
         let currentModel = null;
         window.sceneObj = null; // 最新モデルを常にグローバルへ
-
+  
         // モデル切り替え
         function loadAvatarModel(glbPath) {
           // 既存モデルを即座に消す
@@ -381,16 +285,6 @@
               currentModel = model;
               window.sceneObj = model;
 
-              // アニメーション再生処理
-              if (gltf.animations && gltf.animations.length > 0) {
-                mixer = new THREE.AnimationMixer(model);
-                gltf.animations.forEach((clip) => {
-                  mixer.clipAction(clip).play();
-                });
-              } else {
-                mixer = null;
-              }
-
               // ローディング案内を消す
               document.getElementById('modelLoadingNotice').style.display = 'none';
 
@@ -402,15 +296,15 @@
               setLoadingProgress(progress);
             },
             (error) => {
-              document.getElementById('modelLoadingNotice').textContent = "Failed to load model...";
+              document.getElementById('modelLoadingNotice').textContent = "モデルの読み込みに失敗しました";
               console.error('3Dモデルの読み込み中にエラー:', error);
             }
           );
         }
-
+  
         // 最初の表示：AvatarModel0
         loadAvatarModel('./assets/models/AvatarModel0.glb');
-
+  
         // seg1/seg2タップでモデル切り替え
         document.querySelector('.seg1').addEventListener('pointerdown', () => {
           loadAvatarModel('./assets/models/AvatarModel0.glb');
@@ -418,21 +312,11 @@
         document.querySelector('.seg2').addEventListener('pointerdown', () => {
           loadAvatarModel('./assets/models/AvatarModel1.glb');
         });
-        // seg3タップ時の動作変更
         document.querySelector('.seg3').addEventListener('pointerdown', () => {
-          document.getElementById('snsModal').classList.add('active');
+          // window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
+          location.href = 'https://x.com/r_tkbyc'; // 同じタブで遷移したい場合はこちら
         });
-        // 「はい」ボタン
-        document.getElementById('snsYes').addEventListener('click', () => {
-          window.open('https://x.com/r_tkbyc', '_blank'); // 新しいタブで開く
-          // location.href = 'https://x.com/r_tkbyc'; // 同じタブで遷移したい場合はこちら
-          document.getElementById('snsModal').classList.remove('active');
-        });
-        // 「いいえ」ボタン
-        document.getElementById('snsNo').addEventListener('click', () => {
-          document.getElementById('snsModal').classList.remove('active');
-        });
-
+  
         // ドラッグで回転
         let dragging = false;
         let lastX = 0, lastY = 0;
@@ -456,7 +340,7 @@
         window.addEventListener('touchend', function(e) {
           dragging = false;
         });
-
+  
         // ピンチ拡大縮小
         let pinchStartDist = null;
         let startScale = 0.5;
@@ -484,7 +368,7 @@
         window.addEventListener('touchend', function(e) {
           if (e.touches.length < 2) pinchStartDist = null;
         });
-
+  
         // スキャンUIの出し入れ
         anchor.onTargetFound = () => {
           scanningUI.style.display = 'none';
@@ -492,20 +376,18 @@
         anchor.onTargetLost = () => {
           scanningUI.style.display = 'block';
         };
-
+  
         await mindarThree.start();
         scanningUI.style.display = 'block';
-
-        // アニメーション用mixerの更新も追加
+  
         renderer.setAnimationLoop(() => {
-          if (mixer) mixer.update(clock.getDelta());
           renderer.render(scene, camera);
         });
-
+  
         window.addEventListener('beforeunload', () => {
           mindarThree.stop();
         });
-
+  
       } catch (error) {
         console.error('WebARの初期化中にエラーが発生:', error);
         hideLoadingModal();

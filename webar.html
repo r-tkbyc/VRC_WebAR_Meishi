@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -223,11 +223,10 @@
       color: #fff;
       box-shadow: 0 0 12px #27c7bc88;
     }
-
   </style>
 </head>
 <body>
-  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.2.7.8</p>
+  <p style="position: fixed; top: 10px; left: 10px; z-index: 1000; color: white;">Ver.5.0.0</p>
 
   <!-- ローディングモーダル -->
   <div class="loading-modal" id="loadingModal">
@@ -249,7 +248,7 @@
 
   <!-- モデル読み込み時のローディング -->
   <div id="modelLoadingNotice" class="model-loading-notice">
-    <span class="loading-text">Loading…</span>
+    <span class="loading-text">読み込み中…</span>
   </div>
 
   <div class="action-menu-area">
@@ -266,7 +265,7 @@
     <img src="./assets/guide/scan-overlay.png" class="scan-overlay" />
     <div class="scan-line"></div>
   </div>
-
+  
   <!-- SNS遷移確認モーダル -->
   <div id="snsModal" class="sns-modal">
     <div class="sns-modal-card">
@@ -374,9 +373,9 @@
             glbPath,
             (gltf) => {
               const model = gltf.scene;
-              model.scale.set(0.5, 0.5, 0.5);
-              model.rotation.set(Math.PI / 2, 0, 0);
               model.position.set(0, 0, 0);
+              model.rotation.set(Math.PI * 0.5, Math.PI * 0, Math.PI * 0);
+              model.scale.set(0.5, 0.5, 0.5);
               anchor.group.add(model);
               currentModel = model;
               window.sceneObj = model;

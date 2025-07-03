@@ -408,15 +408,15 @@
           );
         }
 
-        // 最初の表示：AvatarModel0
-        loadAvatarModel('./assets/models/AvatarModel0.glb');
+        // 最初の表示：AvatarModel1
+        loadAvatarModel('./assets/models/AvatarModel1.glb');
 
         // seg1/seg2タップでモデル切り替え
         document.querySelector('.seg1').addEventListener('pointerdown', () => {
-          loadAvatarModel('./assets/models/AvatarModel0.glb');
+          loadAvatarModel('./assets/models/AvatarModel1.glb');
         });
         document.querySelector('.seg2').addEventListener('pointerdown', () => {
-          loadAvatarModel('./assets/models/AvatarModel1.glb');
+          loadAvatarModel('./assets/models/AvatarModel2.glb');
         });
         // seg3タップ時の動作変更
         document.querySelector('.seg3').addEventListener('pointerdown', () => {
